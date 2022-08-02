@@ -2,5 +2,6 @@
 
 members = [
     "frontend_csv",
-    "codegen"
+    "codegen",
+    "cmd",
 ]
