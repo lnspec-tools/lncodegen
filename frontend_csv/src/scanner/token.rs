@@ -1,3 +1,6 @@
+use std::default;
+
+#[derive(Clone, PartialEq, Debug)]
 pub enum CSVTokenType {
     Comma,
     MsgTy,
@@ -17,10 +20,11 @@ pub enum CSVTokenType {
     Byte,
     BigSize,
     LiteralString,
+    Number,
     None,
 }
-
+#[derive(Clone, PartialEq, Debug)]
 pub struct CSVToken {
-    pub _type: CSVTokenType,
-    pub _value: String,
+    pub ty: CSVTokenType,
+    pub val: String,
 }
