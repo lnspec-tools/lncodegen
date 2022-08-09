@@ -18,10 +18,8 @@ mod test {
         assert!(result.len() > 0);
         for c in result {
             match c.ty {
-                token::CSVTokenType::Comma => assert_eq!(c.val, ","),
                 token::CSVTokenType::MsgTy => assert_eq!(c.val, "msgtype"),
                 token::CSVTokenType::MsgData => assert_eq!(c.val, "msgdata"),
-                token::CSVTokenType::NewLine => assert_eq!(c.val, "\n"),
                 token::CSVTokenType::TlvType => assert_eq!(c.val, "tlvtype"),
                 token::CSVTokenType::TlvData => assert_eq!(c.val, "tlvdata"),
                 token::CSVTokenType::ShortChannelId => assert_eq!(c.val, "short_channel_id"),
@@ -36,7 +34,6 @@ mod test {
                 token::CSVTokenType::Byte => assert_eq!(c.val, "byte"),
                 token::CSVTokenType::BigSize => assert_eq!(c.val, "bigsize"),
                 token::CSVTokenType::LiteralString => continue,
-                token::CSVTokenType::None => continue,
                 token::CSVTokenType::Number => continue,
             }
         }

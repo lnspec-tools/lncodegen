@@ -136,11 +136,11 @@ impl Scanner {
         buffer.clear();
     }
 
-    pub fn scan(&mut self, _symbols: &Vec<char>) -> Vec<CSVToken> {
+    pub fn scan(&mut self, symbols: &Vec<char>) -> Vec<CSVToken> {
         let mut tokenize: Vec<CSVToken> = Vec::new();
         let mut pos = 0;
         let mut current_buffer: String = String::new();
-        let size = _symbols.len();
+        let size = symbols.len();
         while pos < size {
             if self.keywords.contains_key(current_buffer.as_str()) {
                 tokenize.push(
@@ -151,18 +151,18 @@ impl Scanner {
                         .clone(),
                 );
                 current_buffer = String::new();
-                if _symbols[pos] == '\n' {
+                if symbols[pos] == '\n' {
                     self.line += 1;
                 }
             } else {
-                match _symbols[pos] {
+                match symbols[pos] {
                     ',' => self.add_token(&mut tokenize, &mut current_buffer),
                     '\n' => {
                         self.add_token(&mut tokenize, &mut current_buffer);
                         self.line += 1;
                     }
                     _ => {
-                        current_buffer.push(_symbols[pos]);
+                        current_buffer.push(symbols[pos]);
                     }
                 }
             }
