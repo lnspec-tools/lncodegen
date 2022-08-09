@@ -21,7 +21,7 @@ impl Scanner {
             (
                 "msgdata".to_string(),
                 CSVToken {
-                    ty: CSVTokenType::MsgTy,
+                    ty: CSVTokenType::MsgData,
                     val: "msgdata".to_string(),
                 },
             ),
@@ -37,13 +37,6 @@ impl Scanner {
                 CSVToken {
                     ty: CSVTokenType::TlvData,
                     val: "tlvdata".to_string(),
-                },
-            ),
-            (
-                "\n".to_string(),
-                CSVToken {
-                    ty: CSVTokenType::NewLine,
-                    val: "\n".to_string(),
                 },
             ),
             (
@@ -123,16 +116,24 @@ impl Scanner {
                     val: "bigsize".to_string(),
                 },
             ),
-            (
-                ",".to_string(),
-                CSVToken {
-                    ty: CSVTokenType::Comma,
-                    val: ",".to_string(),
-                },
-            ),
         ]);
 
         return Scanner { line, keywords };
+    }
+
+    pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &mut String) {
+        if buffer.trim().parse::<f64>().is_ok() {
+            tokenize.push(CSVToken {
+                ty: CSVTokenType::Number,
+                val: buffer.clone(),
+            });
+        } else {
+            tokenize.push(CSVToken {
+                ty: CSVTokenType::LiteralString,
+                val: buffer.clone(),
+            });
+        }
+        buffer.clear();
     }
 
     pub fn scan(&mut self, _symbols: &Vec<char>) -> Vec<CSVToken> {
@@ -154,36 +155,18 @@ impl Scanner {
                     self.line += 1;
                 }
             } else {
-                if _symbols[pos] == ',' || _symbols[pos] == '\n' {
-                    if current_buffer.trim().parse::<f64>().is_ok() {
-                        tokenize.push(CSVToken {
-                            ty: CSVTokenType::Number,
-                            val: current_buffer.clone(),
-                        });
-                    } else {
-                        tokenize.push(CSVToken {
-                            ty: CSVTokenType::LiteralString,
-                            val: current_buffer.clone(),
-                        });
+                match _symbols[pos] {
+                    ',' => self.add_token(&mut tokenize, &mut current_buffer),
+                    '\n' => {
+                        self.add_token(&mut tokenize, &mut current_buffer);
+                        self.line += 1;
                     }
-                    current_buffer = String::new();
+                    _ => {
+                        current_buffer.push(_symbols[pos]);
+                    }
                 }
             }
-            current_buffer.push(_symbols[pos]);
             pos += 1;
-        }
-        if current_buffer.len() > 0 {
-            if current_buffer.trim().parse::<f64>().is_ok() {
-                tokenize.push(CSVToken {
-                    ty: CSVTokenType::Number,
-                    val: current_buffer.clone(),
-                });
-            } else {
-                tokenize.push(CSVToken {
-                    ty: CSVTokenType::LiteralString,
-                    val: current_buffer.clone(),
-                });
-            }
         }
         return tokenize;
     }

@@ -42,9 +42,7 @@ mod test {
     }
     #[test]
     fn test_one_line() {
-        let path_file = std::env::var_os("CSV_PATH").unwrap();
-        let contents =
-            fs::read_to_string(path_file).expect("Something went wrong reading the file");
+        let contents = "msgtype,init,16";
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new(1);
         let result = scanner.scan(&char_vec);
@@ -54,27 +52,15 @@ mod test {
                 val: "msgtype".to_string(),
             },
             token::CSVToken {
-                ty: token::CSVTokenType::Comma,
-                val: ",".to_string(),
-            },
-            token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "init".to_string(),
-            },
-            token::CSVToken {
-                ty: token::CSVTokenType::Comma,
-                val: ",".to_string(),
             },
             token::CSVToken {
                 ty: token::CSVTokenType::Number,
                 val: "16".to_string(),
             },
-            token::CSVToken {
-                ty: token::CSVTokenType::NewLine,
-                val: "\n".to_string(),
-            },
         ];
-        for c in 0..6 {
+        for c in 0..expected.len() - 1 {
             assert!(result[c].val == expected[c].val);
             debug_assert_eq!(result[c].ty, expected[c].ty);
         }
