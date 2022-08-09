@@ -15,6 +15,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new(1);
         let result = scanner.scan(&char_vec);
+        assert!(result.len() > 0);
         for c in result {
             match c.ty {
                 token::CSVTokenType::Comma => assert_eq!(c.val, ","),
@@ -46,6 +47,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new(1);
         let result = scanner.scan(&char_vec);
+        assert!(result.len() > 0);
         let expected = vec![
             token::CSVToken {
                 ty: token::CSVTokenType::MsgTy,
