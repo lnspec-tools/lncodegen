@@ -136,6 +136,8 @@ impl Scanner {
     }
 
     pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &mut String) {
+        // sanity check if the buffer is empty we can not perform any operation.
+        // FIXME: condition like the following on `init, ,16` are not valid?
         if !buffer.is_empty() {
             if buffer.trim().parse::<f64>().is_ok() {
                 tokenize.push(CSVToken {
@@ -154,10 +156,11 @@ impl Scanner {
 
     pub fn scan(&mut self, symbols: &Vec<char>) -> Vec<CSVToken> {
         let mut tokenize: Vec<CSVToken> = Vec::new();
-        let mut pos = 0;
         let mut current_buffer: String = String::new();
         let size = symbols.len();
-        while pos < size {
+        for pos in 0..size - 1 {
+            // Before go on, check if the current buffer is a keyword
+            // if yes add the keyword value in the token list.
             if self.keywords.contains_key(current_buffer.as_str()) {
                 tokenize.push(
                     self.keywords
@@ -167,22 +170,22 @@ impl Scanner {
                         .clone(),
                 );
                 current_buffer = String::new();
-                if symbols[pos] == '\n' {
+                continue;
+            }
+            // if the current buffer is not a keyword, we check if we are found
+            // a comma or an end-line token, and if nothing of the previous condition is satisfied
+            // we keep putting the token in the current buffer.
+            match symbols[pos] {
+                ',' => self.add_token(&mut tokenize, &mut current_buffer),
+                '\n' => {
+                    self.add_token(&mut tokenize, &mut current_buffer);
                     self.line += 1;
                 }
-            } else {
-                match symbols[pos] {
-                    ',' => self.add_token(&mut tokenize, &mut current_buffer),
-                    '\n' => {
-                        self.add_token(&mut tokenize, &mut current_buffer);
-                        self.line += 1;
-                    }
-                    _ => {
-                        current_buffer.push(symbols[pos]);
-                    }
+                '\t' => {
+                    // FIXME: we need to skip this characters?
                 }
+                _ => current_buffer.push(symbols[pos]),
             }
-            pos += 1;
         }
         return tokenize;
     }
