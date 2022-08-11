@@ -42,7 +42,7 @@ mod test {
     }
     #[test]
     fn test_one_line() {
-        let contents = "msgtype,init,16";
+        let contents = "msgtype,init,16\n";
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new(1);
         let result = scanner.scan(&char_vec);
@@ -132,5 +132,32 @@ mod test {
             debug_assert_eq!(result[c].val, expected[c].val);
             debug_assert_eq!(result[c].ty, expected[c].ty);
         }
+    }
+
+    #[test]
+    #[should_panic(expected = "Empty token between two seperators")]
+    fn test_empty_middle() {
+        let contents = "msgtype,  ,16\n";
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new(1);
+        scanner.scan(&char_vec);
+    }
+    #[test]
+    #[should_panic(expected = "Empty token between two seperators")]
+    fn test_empty_front() {
+        let contents = ",,16\n";
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new(1);
+        scanner.scan(&char_vec);
+    }
+
+    #[test]
+    #[should_panic(expected = "Need EOF symbol")]
+    fn test_empty_eof() {
+        let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
+        msgdata,init,globalfeatures,byte,gflen";
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new(1);
+        scanner.scan(&char_vec);
     }
 }

@@ -158,7 +158,7 @@ impl Scanner {
         let mut tokenize: Vec<CSVToken> = Vec::new();
         let mut current_buffer: String = String::new();
         let size = symbols.len();
-        for pos in 0..size - 1 {
+        for pos in 0..size {
             // Before go on, check if the current buffer is a keyword
             // if yes add the keyword value in the token list.
             if self.keywords.contains_key(current_buffer.as_str()) {
@@ -176,15 +176,25 @@ impl Scanner {
             // a comma or an end-line token, and if nothing of the previous condition is satisfied
             // we keep putting the token in the current buffer.
             match symbols[pos] {
-                ',' => self.add_token(&mut tokenize, &mut current_buffer),
+                ',' => {
+                    if current_buffer.is_empty() {
+                        panic!("Empty token between two seperators")
+                    };
+                    self.add_token(&mut tokenize, &mut current_buffer)
+                }
                 '\n' => {
                     self.add_token(&mut tokenize, &mut current_buffer);
                     self.line += 1;
                 }
-                '\t' => {
+                '\t' | ' ' => {
                     // FIXME: we need to skip this characters?
                 }
-                _ => current_buffer.push(symbols[pos]),
+                _ => {
+                    if pos == size - 1 {
+                        panic!("Need EOF symbol")
+                    };
+                    current_buffer.push(symbols[pos]);
+                }
             }
         }
         return tokenize;
