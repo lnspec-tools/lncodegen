@@ -136,6 +136,8 @@ impl Scanner {
     }
 
     pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &mut String) {
+        // sanity check if the buffer is empty we can not perform any operation.
+        // FIXME: condition like the following on `init, ,16` are not valid?
         if !buffer.is_empty() {
             if buffer.trim().parse::<f64>().is_ok() {
                 tokenize.push(CSVToken {
@@ -157,6 +159,8 @@ impl Scanner {
         let mut current_buffer: String = String::new();
         let size = symbols.len();
         for pos in 0..size - 1 {
+            // Before go on, check if the current buffer is a keyword
+            // if yes add the keyword value in the token list.
             if self.keywords.contains_key(current_buffer.as_str()) {
                 tokenize.push(
                     self.keywords
@@ -168,11 +172,17 @@ impl Scanner {
                 current_buffer = String::new();
                 continue;
             }
+            // if the current buffer is not a keyword, we check if we are found
+            // a comma or an end-line token, and if nothing of the previous condition is satisfied
+            // we keep putting the token in the current buffer.
             match symbols[pos] {
                 ',' => self.add_token(&mut tokenize, &mut current_buffer),
                 '\n' => {
                     self.add_token(&mut tokenize, &mut current_buffer);
                     self.line += 1;
+                }
+                '\t' => {
+                    // FIXME: we need to skip this characters?
                 }
                 _ => current_buffer.push(symbols[pos]),
             }
