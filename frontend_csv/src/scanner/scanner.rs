@@ -116,24 +116,40 @@ impl Scanner {
                     val: "bigsize".to_string(),
                 },
             ),
+            (
+                "tu32".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::Tu32,
+                    val: "tu32".to_string(),
+                },
+            ),
+            (
+                "tu64".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::Tu64,
+                    val: "tu64".to_string(),
+                },
+            ),
         ]);
 
         return Scanner { line, keywords };
     }
 
     pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &mut String) {
-        if buffer.trim().parse::<f64>().is_ok() {
-            tokenize.push(CSVToken {
-                ty: CSVTokenType::Number,
-                val: buffer.clone(),
-            });
-        } else {
-            tokenize.push(CSVToken {
-                ty: CSVTokenType::LiteralString,
-                val: buffer.clone(),
-            });
+        if !buffer.is_empty() {
+            if buffer.trim().parse::<f64>().is_ok() {
+                tokenize.push(CSVToken {
+                    ty: CSVTokenType::Number,
+                    val: buffer.clone(),
+                });
+            } else {
+                tokenize.push(CSVToken {
+                    ty: CSVTokenType::LiteralString,
+                    val: buffer.clone(),
+                });
+            }
+            buffer.clear();
         }
-        buffer.clear();
     }
 
     pub fn scan(&mut self, symbols: &Vec<char>) -> Vec<CSVToken> {

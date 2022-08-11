@@ -35,6 +35,8 @@ mod test {
                 token::CSVTokenType::BigSize => assert_eq!(c.val, "bigsize"),
                 token::CSVTokenType::LiteralString => continue,
                 token::CSVTokenType::Number => continue,
+                token::CSVTokenType::Tu32 => assert_eq!(c.val, "tu32"),
+                token::CSVTokenType::Tu64 => assert_eq!(c.val, "tu64"),
             }
         }
     }
@@ -61,6 +63,71 @@ mod test {
         ];
         for c in 0..expected.len() - 1 {
             assert!(result[c].val == expected[c].val);
+            debug_assert_eq!(result[c].ty, expected[c].ty);
+        }
+    }
+    #[test]
+    fn test_middle_line() {
+        let path_file = std::env::var_os("CSV_PATH").unwrap();
+        let contents =
+            fs::read_to_string(path_file).expect("Something went wrong reading the file");
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new(1);
+        let result = scanner.scan(&char_vec);
+        assert!(result.len() > 0);
+        let expected = vec![
+            token::CSVToken {
+                ty: token::CSVTokenType::MsgTy,
+                val: "msgtype".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::LiteralString,
+                val: "error".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::Number,
+                val: "17".to_string(),
+            },
+        ];
+        for c in 0..expected.len() - 1 {
+            debug_assert_eq!(result[c + 45].val, expected[c].val);
+            debug_assert_eq!(result[c + 45].ty, expected[c].ty);
+        }
+    }
+    #[test]
+    fn test_last_line() {
+        let path_file = std::env::var_os("CSV_PATH").unwrap();
+        let contents =
+            fs::read_to_string(path_file).expect("Something went wrong reading the file");
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new(1);
+        let mut result = scanner.scan(&char_vec);
+        result.reverse();
+        assert!(result.len() > 0);
+        let expected = vec![
+            token::CSVToken {
+                ty: token::CSVTokenType::Tu32,
+                val: "tu32".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::LiteralString,
+                val: "cltv_expiry".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::LiteralString,
+                val: "tlv2".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::LiteralString,
+                val: "n2".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::TlvData,
+                val: "tlvdata".to_string(),
+            },
+        ];
+        for c in 0..expected.len() - 1 {
+            debug_assert_eq!(result[c].val, expected[c].val);
             debug_assert_eq!(result[c].ty, expected[c].ty);
         }
     }

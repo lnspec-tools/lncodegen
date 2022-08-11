@@ -17,6 +17,8 @@ pub enum CSVTokenType {
     BigSize,
     LiteralString,
     Number,
+    Tu32,
+    Tu64,
 }
 #[derive(Clone, PartialEq, Debug)]
 pub struct CSVToken {
