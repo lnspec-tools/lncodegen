@@ -1,22 +1,45 @@
 /// Parse implementation!
-pub mod astMsg;
+pub mod ast_msg;
 pub mod parser;
 
 #[cfg(test)]
 mod test {
-    use crate::parser::astMsg;
+    use crate::parser::ast_msg;
     use crate::parser::parser;
     use crate::scanner::scanner;
     use crate::scanner::token::CSVToken;
+
     #[test]
-    fn scan_simple_one() {
+    fn parse_simple_one_line() {
         let contents = "msgtype,init,16\n";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         let result: Vec<CSVToken> = scanner.scan(&char_vec);
         let mut parser = parser::Parser::new();
-        let result = parser.parse(&result);
+        let result = parser.parse_token(&result);
         assert!(result.len() > 0);
-        debug_assert_eq!(result[0], astMsg::AstMsgType::Msgtype);
+        debug_assert_eq!(result[0].0, ast_msg::AstMsgLineType::Msgtype);
     }
+
+    // #[test]
+    // fn parse_simple_init_msg() {
+    //     let contents = "msgtype,init,16\n
+    //     msgdata,init,gflen,u16,
+    //     msgdata,init,globalfeatures,byte,gflen\n
+    //     msgdata,init,flen,u16,
+    //     msgdata,init,features,byte,flen\n
+    //     msgdata,init,tlvs,init_tlvs,
+    //     tlvtype,init_tlvs,networks,1\n
+    //     tlvdata,init_tlvs,networks,chains,chain_hash,...\n
+    //     tlvtype,init_tlvs,remote_addr,3\n
+    //     tlvdata,init_tlvs,remote_addr,data,byte,...\n";
+    //     let char_vec: Vec<char> = contents.chars().collect();
+    //     let mut scanner = scanner::Scanner::new();
+    //     let result: Vec<CSVToken> = scanner.scan(&char_vec);
+    //     let mut parser = parser::Parser::new();
+    //     let result = parser.parse_token(&result);
+    //     assert!(result.len() > 0);
+    //     // let mut lines = parser::
+    //     debug_assert_eq!(result[0].0, ast_msg::AstMsgLineType::Msgtype);
+    // }
 }

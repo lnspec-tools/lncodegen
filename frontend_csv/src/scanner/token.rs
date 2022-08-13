@@ -19,7 +19,11 @@ pub enum CSVTokenType {
     Number,
     Tu32,
     Tu64,
+    Tlvs,
+    Dotdotdot,
+    Data,
 }
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct CSVToken {
     pub ty: CSVTokenType,

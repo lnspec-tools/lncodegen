@@ -9,7 +9,8 @@ pub struct Scanner {
 }
 
 impl Scanner {
-    pub fn new(line: u64) -> Scanner {
+    pub fn new() -> Scanner {
+        // mapping table for keywords to CSVTokenType
         let keywords = HashMap::from([
             (
                 "msgtype".to_string(),
@@ -130,8 +131,29 @@ impl Scanner {
                     val: "tu64".to_string(),
                 },
             ),
+            (
+                "tlvs".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::Tlvs,
+                    val: "tlvs".to_string(),
+                },
+            ),
+            (
+                "...".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::Dotdotdot,
+                    val: "...".to_string(),
+                },
+            ),
+            (
+                "data".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::Data,
+                    val: "data".to_string(),
+                },
+            ),
         ]);
-
+        let line = 1;
         return Scanner { line, keywords };
     }
 
@@ -177,6 +199,8 @@ impl Scanner {
             // we keep putting the token in the current buffer.
             match symbols[pos] {
                 ',' => {
+                    // Here we panic if we found a comma but the current buffer is empty.
+                    // to handle situation like double commas in seqence.
                     if current_buffer.is_empty() {
                         panic!("Empty token between two seperators")
                     };
@@ -191,6 +215,7 @@ impl Scanner {
                 }
                 _ => {
                     if pos == size - 1 {
+                        // Panic due to No end-line character found at last position.
                         panic!("Need EOF symbol")
                     };
                     current_buffer.push(symbols[pos]);

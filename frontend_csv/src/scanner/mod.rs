@@ -7,13 +7,15 @@ mod test {
     use crate::scanner::scanner;
     use crate::scanner::token;
     use std::fs;
+
+    // Test if scanner read each symbols correctly to its type.
     #[test]
     fn scan_simple_one() {
         let path_file = std::env::var_os("CSV_PATH").unwrap();
         let contents =
             fs::read_to_string(path_file).expect("Something went wrong reading the file");
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
         assert!(result.len() > 0);
         for c in result {
@@ -37,14 +39,19 @@ mod test {
                 token::CSVTokenType::Number => continue,
                 token::CSVTokenType::Tu32 => assert_eq!(c.val, "tu32"),
                 token::CSVTokenType::Tu64 => assert_eq!(c.val, "tu64"),
+                token::CSVTokenType::Tlvs => assert_eq!(c.val, "tlvs"),
+                token::CSVTokenType::Dotdotdot => assert_eq!(c.val, "..."),
+                token::CSVTokenType::Data => assert_eq!(c.val, "data"),
             }
         }
     }
+
+    // Test if scanner read one line correctly
     #[test]
     fn test_one_line() {
         let contents = "msgtype,init,16\n";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
         assert!(result.len() > 0);
         let expected = vec![
@@ -66,12 +73,14 @@ mod test {
             debug_assert_eq!(result[c].ty, expected[c].ty);
         }
     }
+
+    // Test if scanner read middle line correctly
     #[test]
     fn test_middle_line() {
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen\n";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
         assert!(result.len() > 0);
         let expected = vec![
@@ -97,12 +106,14 @@ mod test {
             debug_assert_eq!(result[c + 3].ty, expected[c].ty);
         }
     }
+
+    // Test if scanner read last line correctly
     #[test]
     fn test_last_line() {
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen\n";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         let mut result = scanner.scan(&char_vec);
         result.reverse();
         assert!(result.len() > 0);
@@ -134,30 +145,35 @@ mod test {
         }
     }
 
+    // Test for double commas in seqence between 2 tokens
     #[test]
     #[should_panic(expected = "Empty token between two seperators")]
     fn test_empty_middle() {
         let contents = "msgtype,  ,16\n";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         scanner.scan(&char_vec);
     }
+
+    // Test for double commas in seqence in front of first token
     #[test]
     #[should_panic(expected = "Empty token between two seperators")]
     fn test_empty_front() {
         let contents = ",,16\n";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         scanner.scan(&char_vec);
     }
 
+    // Test if the content has a end of line character at the end
+    // which include \n and commas
     #[test]
     #[should_panic(expected = "Need EOF symbol")]
     fn test_empty_eof() {
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen";
         let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new(1);
+        let mut scanner = scanner::Scanner::new();
         scanner.scan(&char_vec);
     }
 }
