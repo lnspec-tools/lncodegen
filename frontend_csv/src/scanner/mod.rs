@@ -120,6 +120,10 @@ mod test {
         assert!(result.len() > 0);
         let expected = vec![
             token::CSVToken {
+                ty: token::CSVTokenType::EOF,
+                val: "".to_string(),
+            },
+            token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "gflen".to_string(),
             },
