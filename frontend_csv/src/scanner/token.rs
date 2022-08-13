@@ -22,6 +22,8 @@ pub enum CSVTokenType {
     Tlvs,
     Dotdotdot,
     Data,
+    //FIXME: suppor EOF
+    EOF,
 }
 
 #[derive(Clone, PartialEq, Debug)]
