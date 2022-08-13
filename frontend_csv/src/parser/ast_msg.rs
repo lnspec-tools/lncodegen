@@ -1,6 +1,7 @@
 use crate::scanner::token::CSVTokenType;
+use std::fmt::Debug;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum AstMsgLineType {
     Msgtype,
     MsgdataLength,
@@ -14,7 +15,7 @@ pub enum AstMsgLineType {
     None,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum AstMsgType {
     Init,
     Warning,
@@ -77,7 +78,7 @@ impl AstMsgTrait for InitMsg {
                     return false;
                 }
                 // we store msg name in the msg_name for future reference
-                self.msg_name = self.raw[pos].1[0].clone();
+                self.msg_name = self.raw[pos].1[1].clone();
             }
             if [
                 AstMsgLineType::MsgdataLength,
@@ -87,7 +88,10 @@ impl AstMsgTrait for InitMsg {
             .contains(&self.raw[pos].0)
             {
                 if self.raw[pos].1[1] != self.msg_name {
-                    println!("Msg name reference is not correct");
+                    println!(
+                        "Msg name reference is not correct {} != {}",
+                        self.raw[pos].1[1], self.msg_name
+                    );
                     return false;
                 }
             }
@@ -115,11 +119,24 @@ impl AstMsgTrait for InitMsg {
 
 // This function is used to map vector of CSVTokenType to AstMsgType
 pub fn map_csvtoken(v: Vec<CSVTokenType>) -> AstMsgLineType {
+    // A preifx of CSVtokens for msgDatalength
+    // We need this because at the end of the msgDatalength we can have different interger type such as
+    // u16, u32, u64
+    let test_msgdatalen_vec = [
+        CSVTokenType::MsgData,
+        CSVTokenType::LiteralString,
+        CSVTokenType::LiteralString,
+    ];
     match v[..] {
         [CSVTokenType::MsgTy, CSVTokenType::LiteralString, CSVTokenType::Number] => {
             AstMsgLineType::Msgtype
         }
-        [CSVTokenType::MsgData, CSVTokenType::LiteralString, CSVTokenType::Number] => {
+        // Here we match the msgDatalength by combine the the base msgDatalength and the interger type
+        // and test all the possible combination to see if it matches
+        _ if [CSVTokenType::U16, CSVTokenType::U32, CSVTokenType::U64]
+            .iter()
+            .any(|item| v == [test_msgdatalen_vec.as_slice(), [*item].as_slice()].concat()) =>
+        {
             AstMsgLineType::MsgdataLength
         }
         [CSVTokenType::MsgData, CSVTokenType::LiteralString, CSVTokenType::LiteralString, CSVTokenType::Byte, CSVTokenType::LiteralString] => {
