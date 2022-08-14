@@ -1,3 +1,4 @@
+pub mod parser;
 /// Normal compiler
 /// Frontend -> Parser -> AST
 /// Our case

@@ -15,7 +15,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result: Vec<CSVToken> = scanner.scan(&char_vec);
-        let mut parser = parser::Parser::new();
+        let mut parser = parser::Parser::new(result.clone());
         let result = parser.parse_token(&result);
         assert!(result.len() > 0);
         debug_assert_eq!(result[0].0, ast_msg::AstMsgLineType::Msgtype);
@@ -27,7 +27,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result: Vec<CSVToken> = scanner.scan(&char_vec);
-        let mut parser = parser::Parser::new();
+        let mut parser = parser::Parser::new(result.clone());
         let result = parser.parse_token(&result);
         assert!(result.len() > 1);
         debug_assert_eq!(result[0].0, ast_msg::AstMsgLineType::Msgtype);
@@ -49,9 +49,22 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result: Vec<CSVToken> = scanner.scan(&char_vec);
-        let mut parser = parser::Parser::new();
+        let mut parser = parser::Parser::new(result.clone());
         let messages = parser.parse(&result);
         assert!(result.len() > 0);
         debug_assert_eq!(messages[0].get_msg_type(), ast_msg::AstMsgType::Init);
+    }
+
+    #[test]
+    fn parse_simple_recursive_line() {
+        let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n";
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new();
+        let result: Vec<CSVToken> = scanner.scan(&char_vec);
+        let mut parser = parser::Parser::new(result.clone());
+        parser.parse_recurisve();
+        debug_assert!(parser.lines.len() > 0);
+        debug_assert_eq!(parser.lines[0].0, ast_msg::AstMsgLineType::Msgtype);
+        debug_assert_eq!(parser.lines[1].0, ast_msg::AstMsgLineType::MsgdataLength);
     }
 }

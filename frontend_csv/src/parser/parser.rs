@@ -7,11 +7,19 @@ use crate::scanner::token::CSVToken;
 use crate::scanner::token::CSVTokenType;
 /// Core implementation of the parser
 
-pub struct Parser {}
+pub struct Parser {
+    pub source: Vec<CSVToken>,
+    pub buffer: Vec<CSVToken>,
+    pub lines: Vec<(AstMsgLineType, Vec<String>)>,
+}
 
 impl Parser {
-    pub fn new() -> Parser {
-        return Parser {};
+    pub fn new(source: Vec<CSVToken>) -> Parser {
+        return Parser {
+            source: source,
+            buffer: Vec::new(),
+            lines: Vec::new(),
+        };
     }
 
     // parse tokens into lines
@@ -68,5 +76,179 @@ impl Parser {
         let lines = self.parse_token(source);
         let msgs = self.parse_lines(&lines);
         return msgs;
+    }
+
+    // method for checking if lines is completed or not
+    // if yes add to lines, clear the buffer and return true
+    fn match_lines(&mut self) -> bool {
+        let token_type_buffer = self.buffer.clone().into_iter().map(|p| p.ty).collect();
+        let token_val_buffer: Vec<String> =
+            self.buffer.clone().into_iter().map(|p| p.val).collect();
+        let tmp = ast_msg::map_csvtoken(token_type_buffer);
+        if tmp != AstMsgLineType::None {
+            self.lines
+                .push((tmp.clone(), token_val_buffer.to_owned().clone()));
+            self.buffer.clear();
+            return true;
+        }
+        return false;
+    }
+
+    // parsing method for Number type
+    // for now only LiteralString is possible following the Number type
+    fn parse_number_token(&mut self) {
+        if self.match_lines() {
+            return;
+        }
+        let token = self.pop_source();
+        match token.ty {
+            CSVTokenType::LiteralString => {
+                self.buffer.push(token);
+                self.parse_literal_token();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
+    // We dont check for matchline here
+    // because tlvs type is never at the end of a line
+    fn parse_tlvs_token(&mut self) {
+        let token = self.pop_source();
+        self.buffer.push(token.clone());
+        match token.ty {
+            CSVTokenType::LiteralString => {
+                self.parse_literal_token();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
+    // For now uint token appear only at the end of the line
+    fn parse_uint_token(&mut self) {
+        if self.match_lines() {
+            return;
+        } else {
+            panic!("This should be an end token");
+        }
+    }
+
+    // For now ... token appear only at the end of the line
+    fn parse_dotdotdot_token(&mut self) {
+        if self.match_lines() {
+            return;
+        } else {
+            panic!("This should be an end token");
+        }
+    }
+
+    // only string or ... following bytes
+    fn parse_byte_token(&mut self) {
+        let token = self.pop_source();
+        match token.ty {
+            CSVTokenType::LiteralString => {
+                self.buffer.push(token);
+                self.parse_literal_token();
+            }
+            CSVTokenType::Dotdotdot => {
+                self.buffer.push(token);
+                self.parse_dotdotdot_token();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
+    // only ... following chainhash
+    fn parse_chainhash_token(&mut self) {
+        let token = self.pop_source();
+        match token.ty {
+            CSVTokenType::Dotdotdot => {
+                self.buffer.push(token);
+                self.parse_dotdotdot_token();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
+    // literal string has many possiblity
+    fn parse_literal_token(&mut self) {
+        if self.match_lines() {
+            return;
+        }
+        let token = self.pop_source();
+        self.buffer.push(token.clone());
+        match token.ty {
+            CSVTokenType::LiteralString => {
+                self.parse_literal_token();
+            }
+            CSVTokenType::Number => {
+                self.parse_number_token();
+            }
+            CSVTokenType::Tlvs => {
+                self.parse_tlvs_token();
+            }
+            CSVTokenType::Byte => {
+                self.parse_byte_token();
+            }
+            CSVTokenType::U16 | CSVTokenType::U32 | CSVTokenType::U64 => {
+                self.parse_uint_token();
+            }
+            CSVTokenType::ChainHash => {
+                self.parse_chainhash_token();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
+    // all starting token is follow by a string
+    fn parse_starting_token(&mut self) {
+        let token = self.pop_source();
+        match token.ty {
+            CSVTokenType::LiteralString => {
+                self.buffer.push(token);
+                self.parse_literal_token();
+            }
+            _ => {}
+        }
+    }
+
+    // helper function for poping front item
+    fn pop_source(&mut self) -> CSVToken {
+        let token = self.source[0].clone();
+        self.source.remove(0);
+        return token;
+    }
+
+    // parsing recurisve as there only could 3 starting CSVTokenType
+    // main entry point for parsing
+    pub fn parse_recurisve(&mut self) {
+        while !self.source.is_empty() {
+            let token = self.pop_source();
+            match token.ty {
+                CSVTokenType::MsgTy
+                | CSVTokenType::MsgData
+                | CSVTokenType::TlvData
+                | CSVTokenType::TlvType => {
+                    self.buffer.push(token);
+                    print!("calling parse_literal_token\n");
+                    self.parse_starting_token();
+                }
+                CSVTokenType::EOF => {
+                    return;
+                }
+                _ => {
+                    panic!("{:?} unexpected token type", token.ty);
+                }
+            }
+        }
     }
 }
