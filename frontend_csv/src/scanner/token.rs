@@ -1,4 +1,4 @@
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum CSVTokenType {
     MsgTy,
     MsgData,
@@ -22,6 +22,7 @@ pub enum CSVTokenType {
     Tlvs,
     Dotdotdot,
     Data,
+    EOF,
 }
 
 #[derive(Clone, PartialEq, Debug)]

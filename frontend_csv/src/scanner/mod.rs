@@ -37,6 +37,7 @@ mod test {
                 token::CSVTokenType::BigSize => assert_eq!(c.val, "bigsize"),
                 token::CSVTokenType::LiteralString => continue,
                 token::CSVTokenType::Number => continue,
+                token::CSVTokenType::EOF => continue,
                 token::CSVTokenType::Tu32 => assert_eq!(c.val, "tu32"),
                 token::CSVTokenType::Tu64 => assert_eq!(c.val, "tu64"),
                 token::CSVTokenType::Tlvs => assert_eq!(c.val, "tlvs"),
@@ -118,6 +119,10 @@ mod test {
         result.reverse();
         assert!(result.len() > 0);
         let expected = vec![
+            token::CSVToken {
+                ty: token::CSVTokenType::EOF,
+                val: "".to_string(),
+            },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "gflen".to_string(),

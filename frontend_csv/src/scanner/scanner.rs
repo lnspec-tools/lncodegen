@@ -222,6 +222,11 @@ impl Scanner {
                 }
             }
         }
+        // put an EOF token at the end of the result for easy processing in parser.
+        tokenize.push(CSVToken {
+            ty: CSVTokenType::EOF,
+            val: "".to_string(),
+        });
         return tokenize;
     }
 }
