@@ -11,6 +11,7 @@ pub enum AstMsgLineType {
     Tlvdata,
     TlvByteDataWithDot,
     TvlChainWithDot,
+    MsgDataChannelID,
     // temporary place holder for no match
     None,
 }
@@ -32,38 +33,38 @@ pub struct AstMsg {
     pub msg_val: String,
 }
 
-pub struct InitMsg {
+pub struct Msg {
     pub raw: Vec<(AstMsgLineType, Vec<String>)>,
     pub msg_type: AstMsgType,
-    pub msg_val: String,
+    pub msg_val: Vec<Vec<String>>,
     pub msg_name: String,
     pub tlvs_name: Vec<String>,
 }
 
 pub trait AstMsgTrait {
     fn get_msg_type(&self) -> AstMsgType;
-    fn get_values(&self) -> String;
+    fn get_values(&self) -> Vec<Vec<String>>;
     fn check_valid(&mut self) -> bool;
 }
 
-impl InitMsg {
-    pub fn new(lines: Vec<(AstMsgLineType, Vec<String>)>) -> InitMsg {
-        return InitMsg {
-            raw: lines,
-            msg_type: AstMsgType::Init,
-            msg_val: String::new(),
+impl Msg {
+    pub fn new(lines: Vec<(AstMsgLineType, Vec<String>)>) -> Msg {
+        return Msg {
+            raw: lines.clone(),
+            msg_type: AstMsgType::None,
+            msg_val: lines.into_iter().map(|p| p.1).collect(),
             msg_name: String::new(),
             tlvs_name: Vec::new(),
         };
     }
 }
 
-impl AstMsgTrait for InitMsg {
+impl AstMsgTrait for Msg {
     fn get_msg_type(&self) -> AstMsgType {
         return self.msg_type.clone();
     }
 
-    fn get_values(&self) -> String {
+    fn get_values(&self) -> Vec<Vec<String>> {
         return self.msg_val.clone();
     }
 
@@ -73,13 +74,15 @@ impl AstMsgTrait for InitMsg {
         for pos in 0..size {
             if self.raw[pos].0 == AstMsgLineType::Msgtype && self.msg_name.is_empty() {
                 // checking if interger type matches
-                if self.raw[pos].1[2] != "16" {
-                    println!("msgtype must be 16");
-                    return false;
-                }
+                // For future type checking
+                // if self.raw[pos].1[2] != "16" {
+                //     println!("msgtype must be 16");
+                //     return false;
+                // }
                 // we store msg name in the msg_name for future reference
                 self.msg_name = self.raw[pos].1[1].clone();
             }
+            // check reference name for msg name
             if [
                 AstMsgLineType::MsgdataLength,
                 AstMsgLineType::MsgDataBytes,
@@ -142,6 +145,12 @@ pub fn map_csvtoken(v: Vec<CSVTokenType>) -> AstMsgLineType {
         [CSVTokenType::MsgData, CSVTokenType::LiteralString, CSVTokenType::LiteralString, CSVTokenType::Byte, CSVTokenType::LiteralString] => {
             AstMsgLineType::MsgDataBytes
         }
+        [CSVTokenType::MsgData, CSVTokenType::LiteralString, CSVTokenType::Data, CSVTokenType::Byte, CSVTokenType::LiteralString] => {
+            AstMsgLineType::MsgDataBytes
+        }
+        [CSVTokenType::MsgData, CSVTokenType::LiteralString, CSVTokenType::ChannelId, CSVTokenType::ChannelId] => {
+            AstMsgLineType::MsgDataChannelID
+        }
         // msgdata,init,tlvs,init_tlvs,
         [CSVTokenType::MsgData, CSVTokenType::LiteralString, CSVTokenType::Tlvs, CSVTokenType::LiteralString] => {
             AstMsgLineType::MsgDataTLVInit
@@ -169,6 +178,7 @@ pub fn map_csvtoken(v: Vec<CSVTokenType>) -> AstMsgLineType {
 }
 
 // map sentences to msg type
+// for now we don't need to concern with msg type....
 pub fn map_line_to_msg(lines: Vec<AstMsgLineType>) -> AstMsgType {
     match lines[..] {
         [AstMsgLineType::Msgtype, AstMsgLineType::MsgdataLength, AstMsgLineType::MsgDataBytes, AstMsgLineType::MsgdataLength, AstMsgLineType::MsgDataBytes, AstMsgLineType::MsgDataTLVInit, AstMsgLineType::Tlvtype, AstMsgLineType::TvlChainWithDot, AstMsgLineType::Tlvtype, AstMsgLineType::TlvByteDataWithDot] => {

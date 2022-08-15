@@ -1,8 +1,6 @@
 use super::ast_msg;
 use super::ast_msg::AstMsgLineType;
 use super::ast_msg::AstMsgTrait;
-use super::ast_msg::AstMsgType;
-use super::ast_msg::InitMsg;
 use crate::scanner::token::CSVToken;
 use crate::scanner::token::CSVTokenType;
 /// Core implementation of the parser
@@ -11,6 +9,8 @@ pub struct Parser {
     pub source: Vec<CSVToken>,
     pub buffer: Vec<CSVToken>,
     pub lines: Vec<(AstMsgLineType, Vec<String>)>,
+    pub lines_buffer: Vec<(AstMsgLineType, Vec<String>)>,
+    pub messages: Vec<Box<dyn AstMsgTrait>>,
 }
 
 impl Parser {
@@ -19,63 +19,9 @@ impl Parser {
             source: source,
             buffer: Vec::new(),
             lines: Vec::new(),
+            messages: Vec::new(),
+            lines_buffer: Vec::new(),
         };
-    }
-
-    // parse tokens into lines
-    pub fn parse_token(&mut self, source: &Vec<CSVToken>) -> Vec<(AstMsgLineType, Vec<String>)> {
-        let mut current_buffer: Vec<CSVTokenType> = Vec::new();
-        let mut current_buffer_val: Vec<String> = Vec::new();
-        let mut result: Vec<(AstMsgLineType, Vec<String>)> = Vec::new();
-        let size = source.len();
-        for pos in 0..size {
-            let token = source[pos].ty.to_owned().clone();
-            let token_val = source[pos].val.to_owned().clone();
-            current_buffer.push(token);
-            current_buffer_val.push(token_val);
-            let tmp = ast_msg::map_csvtoken(current_buffer.to_owned().clone());
-            if tmp != AstMsgLineType::None {
-                result.push((tmp.clone(), current_buffer_val.to_owned().clone()));
-                current_buffer_val.clear();
-                current_buffer.clear();
-            }
-        }
-        return result;
-    }
-
-    // parse lines into messages
-    pub fn parse_lines(
-        &mut self,
-        source: &Vec<(AstMsgLineType, Vec<String>)>,
-    ) -> Vec<Box<dyn AstMsgTrait>> {
-        let mut current_buffer: Vec<AstMsgLineType> = Vec::new();
-        let mut current_buffer_val: Vec<Vec<String>> = Vec::new();
-        let mut result: Vec<Box<dyn AstMsgTrait>> = Vec::new();
-        let size = source.len();
-        for pos in 0..size {
-            current_buffer_val.push(source[pos].1.to_owned().clone());
-            current_buffer.push(source[pos].0.to_owned().clone());
-            let tmp = ast_msg::map_line_to_msg(current_buffer.clone());
-            if tmp == AstMsgType::Init {
-                let mut combin_vec: Vec<(AstMsgLineType, Vec<String>)> = Vec::new();
-                for i in 0..current_buffer_val.len() {
-                    combin_vec.push((current_buffer[i].clone(), current_buffer_val[i].clone()));
-                }
-                let mut init_msg = InitMsg::new(combin_vec);
-                if init_msg.check_valid() {
-                    result.push(Box::new(init_msg));
-                }
-                current_buffer_val.clear();
-                current_buffer.clear();
-            }
-        }
-        return result;
-    }
-
-    pub fn parse(&mut self, source: &Vec<CSVToken>) -> Vec<Box<dyn AstMsgTrait>> {
-        let lines = self.parse_token(source);
-        let msgs = self.parse_lines(&lines);
-        return msgs;
     }
 
     // method for checking if lines is completed or not
@@ -177,6 +123,39 @@ impl Parser {
         }
     }
 
+    fn parse_data_token(&mut self) {
+        let token = self.pop_source();
+        match token.ty {
+            CSVTokenType::Byte => {
+                self.buffer.push(token);
+                self.parse_byte_token();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
+    fn parse_channel_id_token(&mut self) {
+        if self.match_lines() {
+            return;
+        }
+        let token = self.pop_source();
+        match token.ty {
+            CSVTokenType::ChannelId => {
+                self.buffer.push(token);
+                self.parse_channel_id_token();
+            }
+            CSVTokenType::MsgData => {
+                self.buffer.push(token);
+                self.parse_msg_data_line();
+            }
+            _ => {
+                panic!("unexpected token type");
+            }
+        }
+    }
+
     // literal string has many possiblity
     fn parse_literal_token(&mut self) {
         if self.match_lines() {
@@ -203,8 +182,14 @@ impl Parser {
             CSVTokenType::ChainHash => {
                 self.parse_chainhash_token();
             }
+            CSVTokenType::Data => {
+                self.parse_data_token();
+            }
+            CSVTokenType::ChannelId => {
+                self.parse_channel_id_token();
+            }
             _ => {
-                panic!("unexpected token type");
+                panic!("{:?} unexpected token type", token.ty);
             }
         }
     }
@@ -217,7 +202,7 @@ impl Parser {
                 self.buffer.push(token);
                 self.parse_literal_token();
             }
-            _ => {}
+            _ => panic!("{:?} unexpected token type {:?}", token.ty, token.val),
         }
     }
 
@@ -228,9 +213,23 @@ impl Parser {
         return token;
     }
 
+    fn pop_line(&mut self) -> (AstMsgLineType, Vec<String>) {
+        let line = self.lines[0].clone();
+        self.lines.remove(0);
+        return line;
+    }
+
+    fn peek_line(&mut self) -> (AstMsgLineType, Vec<String>) {
+        if !self.lines.is_empty() {
+            let line = self.lines[0].clone();
+            return line;
+        }
+        return (AstMsgLineType::None, Vec::new());
+    }
+
     // parsing recurisve as there only could 3 starting CSVTokenType
     // main entry point for parsing
-    pub fn parse_recurisve(&mut self) {
+    pub fn parse_recurisve_tokens(&mut self) {
         while !self.source.is_empty() {
             let token = self.pop_source();
             match token.ty {
@@ -239,16 +238,141 @@ impl Parser {
                 | CSVTokenType::TlvData
                 | CSVTokenType::TlvType => {
                     self.buffer.push(token);
-                    print!("calling parse_literal_token\n");
                     self.parse_starting_token();
                 }
                 CSVTokenType::EOF => {
                     return;
                 }
                 _ => {
-                    panic!("{:?} unexpected token type", token.ty);
+                    panic!("{:?} unexpected token type {:?}", token.ty, token.val);
                 }
             }
         }
+    }
+
+    fn parse_tlv_data_line(&mut self) {
+        let mut line = self.peek_line();
+        match line.0 {
+            AstMsgLineType::Msgtype | AstMsgLineType::None => {
+                return;
+            }
+            AstMsgLineType::Tlvtype => {
+                line = self.pop_line();
+                self.lines_buffer.push(line);
+                self.parse_tlv_type_line();
+            }
+            _ => {
+                panic!("{:?} unexpected line type", line.0);
+            }
+        }
+    }
+
+    fn parse_tlv_type_line(&mut self) {
+        let line = self.pop_line();
+        match line.0 {
+            AstMsgLineType::Tlvdata
+            | AstMsgLineType::TlvByteDataWithDot
+            | AstMsgLineType::TvlChainWithDot => {
+                self.lines_buffer.push(line);
+                self.parse_tlv_data_line();
+            }
+            _ => {
+                panic!("{:?} unexpected line type", line.0);
+            }
+        }
+    }
+
+    fn parse_tlv_init_line(&mut self) {
+        let line = self.pop_line();
+        match line.0 {
+            AstMsgLineType::Tlvtype => {
+                self.lines_buffer.push(line);
+                self.parse_tlv_type_line();
+            }
+            _ => {
+                panic!("{:?} unexpected line type", line.0);
+            }
+        }
+    }
+
+    fn parse_byte_line(&mut self) {
+        let mut line = self.peek_line();
+        match line.0 {
+            AstMsgLineType::Msgtype | AstMsgLineType::None => {
+                return;
+            }
+            AstMsgLineType::MsgdataLength => {
+                line = self.pop_line();
+                self.lines_buffer.push(line);
+                self.parse_msg_data_line();
+            }
+            AstMsgLineType::MsgDataTLVInit => {
+                line = self.pop_line();
+                self.lines_buffer.push(line);
+                self.parse_tlv_init_line();
+            }
+            _ => {
+                panic!("unexpected line type");
+            }
+        }
+    }
+
+    fn parse_msg_data_line(&mut self) {
+        let mut line = self.peek_line();
+        match line.0 {
+            AstMsgLineType::Msgtype | AstMsgLineType::None => {
+                return;
+            }
+            AstMsgLineType::MsgdataLength => {
+                line = self.pop_line();
+                self.lines_buffer.push(line);
+                self.parse_msg_data_line();
+            }
+            AstMsgLineType::MsgDataBytes => {
+                line = self.pop_line();
+                self.lines_buffer.push(line);
+                self.parse_byte_line();
+            }
+            _ => {
+                panic!("{:?} unexpected line type", line.0);
+            }
+        }
+    }
+
+    fn parse_starting_line(&mut self) {
+        let line = self.pop_line();
+        match line.0 {
+            AstMsgLineType::MsgdataLength
+            | AstMsgLineType::MsgDataBytes
+            | AstMsgLineType::MsgDataChannelID => {
+                self.lines_buffer.push(line);
+                self.parse_msg_data_line();
+            }
+            _ => {
+                panic!("{:?} unexpected line type", line.0);
+            }
+        }
+    }
+
+    pub fn parse_recurisve_lines(&mut self) {
+        while !self.lines.is_empty() {
+            let line = self.pop_line();
+            match line.0 {
+                AstMsgLineType::Msgtype => {
+                    self.lines_buffer.push(line);
+                    self.parse_starting_line();
+                }
+                _ => {
+                    panic!("{:?} unexpected Line type", line.0);
+                }
+            }
+            let msg = ast_msg::Msg::new(self.lines_buffer.clone());
+            self.messages.push(Box::new(msg));
+            self.lines_buffer.clear();
+        }
+    }
+    pub fn parse_recursive(&mut self) {
+        self.parse_recurisve_tokens();
+        self.parse_recurisve_lines();
     }
 }
