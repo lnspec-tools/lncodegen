@@ -1,6 +1,7 @@
 use super::ast_msg;
 use super::ast_msg::AstMsgLineType;
 use super::ast_msg::AstMsgTrait;
+use super::ast_msg::RawCsv;
 use crate::scanner::token::CSVToken;
 use crate::scanner::token::CSVTokenType;
 /// Core implementation of the parser
@@ -366,7 +367,11 @@ impl Parser {
                     panic!("{:?} unexpected Line type", line.0);
                 }
             }
-            let msg = ast_msg::Msg::new(self.lines_buffer.clone());
+            let raw_csv = RawCsv {
+                values: self.lines_buffer.clone().into_iter().map(|p| p.1).collect(),
+                line_type: self.lines_buffer.clone().into_iter().map(|p| p.0).collect(),
+            };
+            let msg = ast_msg::Msg::new(&raw_csv);
             self.messages.push(Box::new(msg));
             self.lines_buffer.clear();
         }

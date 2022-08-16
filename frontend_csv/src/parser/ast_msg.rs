@@ -33,26 +33,31 @@ pub struct AstMsg {
     pub msg_val: String,
 }
 
+#[derive(Clone, PartialEq, Debug)]
+pub struct RawCsv {
+    pub line_type: Vec<AstMsgLineType>,
+    pub values: Vec<Vec<String>>,
+}
 pub struct Msg {
-    pub raw: Vec<(AstMsgLineType, Vec<String>)>,
-    pub msg_type: AstMsgType,
+    pub raw: RawCsv,
+    pub msg_type: Option<AstMsgType>,
     pub msg_val: Vec<Vec<String>>,
     pub msg_name: String,
     pub tlvs_name: Vec<String>,
 }
 
 pub trait AstMsgTrait {
-    fn get_msg_type(&self) -> AstMsgType;
+    fn get_msg_type(&self) -> Option<AstMsgType>;
     fn get_values(&self) -> Vec<Vec<String>>;
     fn check_valid(&mut self) -> bool;
 }
 
 impl Msg {
-    pub fn new(lines: Vec<(AstMsgLineType, Vec<String>)>) -> Msg {
+    pub fn new(lines: &RawCsv) -> Msg {
         return Msg {
             raw: lines.clone(),
-            msg_type: AstMsgType::None,
-            msg_val: lines.into_iter().map(|p| p.1).collect(),
+            msg_type: None,
+            msg_val: lines.values.clone(),
             msg_name: String::new(),
             tlvs_name: Vec::new(),
         };
@@ -60,8 +65,8 @@ impl Msg {
 }
 
 impl AstMsgTrait for Msg {
-    fn get_msg_type(&self) -> AstMsgType {
-        return self.msg_type.clone();
+    fn get_msg_type(&self) -> Option<AstMsgType> {
+        return self.msg_type;
     }
 
     fn get_values(&self) -> Vec<Vec<String>> {
@@ -70,9 +75,9 @@ impl AstMsgTrait for Msg {
 
     // Check if init message is valid
     fn check_valid(&mut self) -> bool {
-        let size = self.raw.len();
+        let size = self.raw.line_type.len();
         for pos in 0..size {
-            if self.raw[pos].0 == AstMsgLineType::Msgtype && self.msg_name.is_empty() {
+            if self.raw.line_type[pos] == AstMsgLineType::Msgtype && self.msg_name.is_empty() {
                 // checking if interger type matches
                 // For future type checking
                 // if self.raw[pos].1[2] != "16" {
@@ -80,7 +85,7 @@ impl AstMsgTrait for Msg {
                 //     return false;
                 // }
                 // we store msg name in the msg_name for future reference
-                self.msg_name = self.raw[pos].1[1].clone();
+                self.msg_name = self.raw.values[pos][1].clone();
             }
             // check reference name for msg name
             if [
@@ -88,19 +93,19 @@ impl AstMsgTrait for Msg {
                 AstMsgLineType::MsgDataBytes,
                 AstMsgLineType::MsgDataTLVInit,
             ]
-            .contains(&self.raw[pos].0)
+            .contains(&self.raw.line_type[pos])
             {
-                if self.raw[pos].1[1] != self.msg_name {
+                if self.raw.values[pos][1] != self.msg_name {
                     println!(
                         "Msg name reference is not correct {} != {}",
-                        self.raw[pos].1[1], self.msg_name
+                        self.raw.values[pos][1], self.msg_name
                     );
                     return false;
                 }
             }
-            if self.raw[pos].0 == AstMsgLineType::MsgDataTLVInit {
+            if self.raw.line_type[pos] == AstMsgLineType::MsgDataTLVInit {
                 // we store tlv name in the tlvs_name vector for future reference
-                self.tlvs_name.push(self.raw[pos].1[3].clone());
+                self.tlvs_name.push(self.raw.values[pos][3].clone());
             }
             if [
                 AstMsgLineType::Tlvdata,
@@ -108,9 +113,9 @@ impl AstMsgTrait for Msg {
                 AstMsgLineType::TlvByteDataWithDot,
                 AstMsgLineType::TvlChainWithDot,
             ]
-            .contains(&self.raw[pos].0)
+            .contains(&self.raw.line_type[pos])
             {
-                if !self.tlvs_name.contains(&self.raw[pos].1[1]) {
+                if !self.tlvs_name.contains(&self.raw.values[pos][1]) {
                     println!("TLV name reference is not correct");
                     return false;
                 }

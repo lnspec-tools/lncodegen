@@ -93,12 +93,12 @@ mod test {
         debug_assert!(parser.messages.len() == 2);
         for pos in 1..expected.len() {
             let expected_token = expected[pos].chars().collect();
-            let expectedline = scanner.scan(&expected_token);
-            let mut expected_parser = parser::Parser::new(expectedline.clone());
+            let expected_line = scanner.scan(&expected_token);
+            let mut expected_parser = parser::Parser::new(expected_line.clone());
             expected_parser.parse_recurisve_tokens();
-            let expectedmsg: Vec<Vec<String>> =
+            let expected_msg: Vec<Vec<String>> =
                 expected_parser.lines.into_iter().map(|p| p.1).collect();
-            debug_assert_eq!(parser.messages[pos].get_values(), expectedmsg);
+            debug_assert_eq!(parser.messages[pos].get_values(), expected_msg);
         }
     }
 }
