@@ -222,6 +222,10 @@ impl Scanner {
                 }
             }
         }
+        tokenize.push(CSVToken {
+            ty: CSVTokenType::EOF,
+            val: "EOF".to_string(),
+        });
         return tokenize;
     }
 }

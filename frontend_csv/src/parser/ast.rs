@@ -1,18 +1,21 @@
 //! Abstract Syntax Tree implementation
+use std::fmt::Debug;
 use std::vec::Vec;
 
 /// Generic lightning network message
 /// with all the information that we need to implement this
+#[derive(Clone, PartialEq, Debug)]
 pub struct LNMsg {
-    msg_typ: u64,
-    msg_name: String,
-    msg_data: Vec<LNMsData>,
+    pub msg_typ: u64,
+    pub msg_name: String,
+    pub msg_data: Vec<LNMsData>,
     /// encode the tlv stream.
     // FIXME: can be encoded as map?
-    tlv_stream: Vec<LNTlvType>,
+    pub tlv_stream: Vec<LNTlvType>,
 }
 
 /// All the Msg Data supported by the LN
+#[derive(Clone, PartialEq, Debug)]
 pub enum LNMsData {
     Unsigned64(String, u64),
     Unsigned32(String, u32),
@@ -21,21 +24,31 @@ pub enum LNMsData {
     ChainHash(String, String),
     /// The array can be bounded or we can read till the EOF
     BitfieldStream(String, Option<u64>),
+    TLVinit(String, String),
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct LNTlvData {
+    pub name: String,
+    pub value: String,
 }
 
 /// Structure that encode
+#[derive(Clone, PartialEq, Debug)]
 pub struct LNTlvType {
-    tlv_typ: u64,
+    pub tlv_type: u64,
     /// Encode the data as free hex and the client
     /// that use the code will decode and encode it
     /// in a particular way.
-    tls_type: String,
+    pub tls_type: String,
+    pub tlv_name: String,
+    pub tlv_data: Option<LNTlvData>,
 }
 
 impl LNMsg {
     /// Build a new lightning network message with the name
     /// and type provided.
-    fn new(msg_typ: u64, msg_name: &str) -> Self {
+    pub fn new(msg_typ: u64, msg_name: &str) -> Self {
         return LNMsg {
             msg_typ: msg_typ,
             msg_name: msg_name.to_string(),
