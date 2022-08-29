@@ -33,10 +33,9 @@ impl Parser {
 
     /// Take the element in the current position of the stream
     /// and increase the position by one
-    fn advance(&mut self, tokens: &Vec<CSVToken>) -> CSVToken {
-        let res = tokens[self.pos].clone();
+    fn advance<'a>(&mut self, tokens: &'a Vec<CSVToken>) -> &'a CSVToken {
         self.pos += 1;
-        return res;
+        return &tokens[self.pos];
     }
 
     /// Parse a message type line of the csv file, where the format looks like
@@ -59,10 +58,8 @@ impl Parser {
         }
     }
 
-
-
     // This method is to get the lenght of the integer type for bytes field
-    // for example: 
+    // for example:
     // msgdata,init,flen,u16,
     // msgdata,init,features,byte,flen
     // flen is the length of the bytes field which is the type u16 which is 2 bytes
@@ -111,8 +108,11 @@ impl Parser {
             CSVTokenType::U32 => self.add_data_lnmsg_buffer(LNMsData::Unsigned32(msg_data_name, 4)),
             CSVTokenType::U64 => self.add_data_lnmsg_buffer(LNMsData::Unsigned64(msg_data_name, 8)),
             CSVTokenType::ChainHash => {
-                let msg_val = self.advance(&tokens).val;
-                self.add_data_lnmsg_buffer(LNMsData::ChainHash(msg_data_name, msg_val));
+                let msg_val = self.advance(&tokens);
+                self.add_data_lnmsg_buffer(LNMsData::ChainHash(
+                    msg_data_name,
+                    msg_val.val.to_owned(),
+                ));
             }
             CSVTokenType::Byte => {
                 let byte_name = self.advance(&tokens).val.to_string();
