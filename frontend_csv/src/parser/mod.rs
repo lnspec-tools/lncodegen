@@ -21,7 +21,7 @@ mod test {
         debug_assert_eq!(
             parser.symbol_table.get("init").unwrap().msg_data[0],
             ast::LNMsData::Unsigned16("gflen".to_string(), 2,)
-        )
+        );
     }
 
     #[test]
