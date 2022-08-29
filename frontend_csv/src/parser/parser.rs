@@ -8,6 +8,7 @@ use crate::parser::ast::LNTlvData;
 use crate::parser::ast::LNTlvType;
 use crate::scanner::token::{CSVToken, CSVTokenType};
 
+#[derive(Debug)]
 pub struct Parser {
     pub symbol_table: BTreeMap<String, LNMsg>,
     pos: usize,
@@ -35,25 +36,24 @@ impl Parser {
     /// and increase the position by one
     fn advance<'a>(&mut self, tokens: &'a Vec<CSVToken>) -> &'a CSVToken {
         self.pos += 1;
-        return &tokens[self.pos];
+        return &tokens[self.pos - 1];
     }
 
     /// Parse a message type line of the csv file, where the format looks like
     /// the following one:
     ///
     /// `msgtype,init,16`
-    fn parse_msg_typ(&mut self, tokens: &Vec<CSVToken>) {
+    fn parse_msg_typ(&mut self, tokens: &Vec<CSVToken>) -> LNMsg {
+        assert_eq!(self.advance(tokens).ty, CSVTokenType::MsgTy);
         let msg_name = self.advance(&tokens);
         let msg_type = self.advance(&tokens);
         match msg_type.ty {
-            CSVTokenType::Number => {
-                self.lnmsg_buffer = Some(LNMsg {
-                    msg_typ: msg_type.val.parse::<u64>().unwrap(),
-                    msg_name: msg_name.val.to_string(),
-                    msg_data: Vec::new(),
-                    tlv_stream: Vec::new(),
-                });
-            }
+            CSVTokenType::Number => LNMsg {
+                msg_typ: msg_type.val.parse::<u64>().unwrap(),
+                msg_name: msg_name.val.to_owned(),
+                msg_data: Vec::new(),
+                tlv_stream: Vec::new(),
+            },
             _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
         }
     }
@@ -65,7 +65,7 @@ impl Parser {
     // flen is the length of the bytes field which is the type u16 which is 2 bytes
     // so for features field the lenght is 2 bytes and this method map it together.
     fn get_byte_length(&self, keyword: String) -> u64 {
-        let tmp_vec = self.lnmsg_buffer.clone().unwrap().msg_data;
+        let tmp_vec = &self.lnmsg_buffer.as_ref().unwrap().msg_data;
 
         for i in 0..tmp_vec.len() {
             match tmp_vec[i] {
@@ -95,47 +95,44 @@ impl Parser {
     //// Parse a message data entry
     ///  msgdata,init,globalfeatures,byte,gflen
     ///  msgdata,init,gflen,u16,
-    fn parse_msg_data(&mut self, tokens: &Vec<CSVToken>) {
-        self.advance(&tokens); // msgdata
-        let msg_data_name = self.advance(&tokens).val.to_string();
-        print!("\n{:?}\n", msg_data_name);
-        let msg_data_type = self.advance(&tokens);
-        print!("\n{:?} {:?}\n", self.pos - 1, tokens[self.pos - 1]);
+    fn parse_msg_data(&mut self, tokens: &Vec<CSVToken>) -> Vec<LNMsData> {
+        let mut msg_data = vec![];
+        while self.peek(tokens).ty == CSVTokenType::MsgData {
+            assert_eq!(self.advance(&tokens).ty, CSVTokenType::MsgData); // consume msgdata tok.
+            let msg_data_name = self.advance(&tokens).val.to_owned();
+            println!(" Msg Name: {:?}", msg_data_name);
 
-        print!("\n msg type {:?} \n", msg_data_type.ty);
-        match msg_data_type.ty {
-            CSVTokenType::U16 => self.add_data_lnmsg_buffer(LNMsData::Unsigned16(msg_data_name, 2)),
-            CSVTokenType::U32 => self.add_data_lnmsg_buffer(LNMsData::Unsigned32(msg_data_name, 4)),
-            CSVTokenType::U64 => self.add_data_lnmsg_buffer(LNMsData::Unsigned64(msg_data_name, 8)),
-            CSVTokenType::ChainHash => {
-                let msg_val = self.advance(&tokens);
-                self.add_data_lnmsg_buffer(LNMsData::ChainHash(
-                    msg_data_name,
-                    msg_val.val.to_owned(),
-                ));
-            }
-            CSVTokenType::Byte => {
-                let byte_name = self.advance(&tokens).val.to_string();
-                print!("\n bytes name {:?}\n", byte_name);
-                let msg_val = self.get_byte_length(byte_name.clone());
-                self.add_data_lnmsg_buffer(LNMsData::BitfieldStream(
-                    msg_data_name.clone(),
-                    Some(msg_val),
-                ));
-            }
-            CSVTokenType::LiteralString => self.add_data_lnmsg_buffer(LNMsData::TLVinit(
-                msg_data_type.val.to_string(),
-                msg_data_name,
-            )),
-            _ => panic!("Unknown Token {:?}", msg_data_type),
+            let msg_data_type = self.advance(&tokens);
+            println!("Msg: type {:?}", msg_data_type);
+            print!("\n msg type {:?} \n", msg_data_type.ty);
+
+            let msg = match msg_data_type.ty {
+                CSVTokenType::U16 => LNMsData::Unsigned16(msg_data_name, 2),
+                CSVTokenType::U32 => LNMsData::Unsigned32(msg_data_name, 4),
+                CSVTokenType::U64 => LNMsData::Unsigned64(msg_data_name, 8),
+                CSVTokenType::ChainHash => {
+                    let msg_val = self.advance(&tokens);
+                    LNMsData::ChainHash(msg_data_name, msg_val.val.to_owned())
+                }
+                CSVTokenType::Byte => {
+                    let byte_name = self.advance(&tokens).val.to_string();
+                    print!("\n bytes name {:?}\n", byte_name);
+                    let msg_val = self.get_byte_length(byte_name);
+                    LNMsData::BitfieldStream(msg_data_name, Some(msg_val))
+                }
+                // TODO: this is correct? we must generalize here otherwise the parser
+                // start to have no sense.
+                CSVTokenType::LiteralString => {
+                    LNMsData::TLVinit(msg_data_type.val.to_owned(), msg_data_name)
+                }
+                _ => panic!("Unknown Token {:?}", msg_data_type),
+            };
+            msg_data.push(msg);
         }
+        msg_data
     }
 
-    fn add_data_lnmsg_buffer(&mut self, data: LNMsData) {
-        self.lnmsg_buffer.as_mut().unwrap().msg_data.push(data);
-    }
-
-    /// PArse a TLV type declaration
+    /// Parse a TLV type declaration
     fn parse_tlv_typ(&mut self, tokens: &Vec<CSVToken>) {
         // init_tlvs,networks,1
         match self.peek(&tokens).ty {
@@ -169,16 +166,6 @@ impl Parser {
         }
     }
 
-    fn insert_and_reset_lnmsg(&mut self) {
-        if self.lnmsg_buffer != None {
-            self.symbol_table.insert(
-                self.lnmsg_buffer.clone().unwrap().msg_name.clone(),
-                self.lnmsg_buffer.clone().unwrap(),
-            );
-            self.lnmsg_buffer = None
-        }
-    }
-
     fn insert_and_reset_tlv(&mut self) {
         if self.lntlv_buffer != None {
             self.lnmsg_buffer
@@ -190,24 +177,33 @@ impl Parser {
         }
     }
 
+    fn is_eof(&self, tokens: &Vec<CSVToken>) -> bool {
+        return self.peek(tokens).ty == CSVTokenType::EOF;
+    }
+
     /// Entry point of the parser!
     pub fn parse(&mut self, tokens: &Vec<CSVToken>) {
-        while self.peek(&tokens).ty != CSVTokenType::EOF {
-            match self.advance(&tokens).ty {
+        while !self.is_eof(tokens) {
+            match self.peek(&tokens).ty {
                 CSVTokenType::MsgTy => {
-                    self.insert_and_reset_lnmsg();
-                    self.parse_msg_typ(&tokens)
+                    let mut msg = self.parse_msg_typ(&tokens);
+                    assert_eq!(self.peek(tokens).ty, CSVTokenType::MsgData);
+                    let mut msg_data = self.parse_msg_data(tokens);
+                    msg.msg_data.append(&mut msg_data);
+                    self.symbol_table.insert(msg.msg_name.to_owned(), msg);
                 }
-                CSVTokenType::MsgData => self.parse_msg_data(&tokens),
                 CSVTokenType::TlvType => {
                     self.insert_and_reset_tlv();
                     self.parse_tlv_typ(&tokens)
                 }
                 CSVTokenType::TlvData => self.parse_tlv_data(tokens),
-                _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
+                _ => panic!(
+                    "Unknown Token {:?}, parser status {:?}",
+                    self.peek(&tokens),
+                    self
+                ),
             }
         }
         self.insert_and_reset_tlv();
-        self.insert_and_reset_lnmsg();
     }
 }
