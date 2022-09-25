@@ -5,15 +5,19 @@ pub mod parser;
 #[cfg(test)]
 mod test {
 
-    use env_logger::Env;
-
     use crate::parser::ast;
     use crate::parser::parser;
     use crate::scanner::scanner;
     use crate::scanner::token::CSVToken;
+    use std::sync::Once;
+
+    static INIT: Once = Once::new();
 
     fn init() {
-        env_logger::Builder::from_env(Env::default().default_filter_or("trace")).init();
+        // ignore error
+        INIT.call_once(|| {
+            env_logger::init();
+        });
     }
 
     #[test]
@@ -27,7 +31,7 @@ mod test {
         parser.parse(&result);
         debug_assert_eq!(
             parser.symbol_table.get("init").unwrap().msg_data[0],
-            ast::LNMsData::Unsigned16("gflen".to_string(), 2,)
+            ast::LNMsData::Uint("u16".to_string())
         );
     }
 
@@ -35,8 +39,8 @@ mod test {
     #[should_panic]
     fn parse_simple_failure_line() {
         init();
-        let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
-        msgdata,init,,gflen\n";
+        let contents = "msgtype,init,16 \
+                        msgdata,init,gflen,u16";
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result: Vec<CSVToken> = scanner.scan(&char_vec);
@@ -65,20 +69,20 @@ mod test {
         let mut parser = parser::Parser::new();
         parser.parse(&result);
         // check bytes line
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().msg_data[1],
-            ast::LNMsData::BitfieldStream("globalfeatures".to_string(), Some(2),)
+            ast::LNMsData::BitfieldStream("globalfeatures".to_string(), "2".to_string())
         );
         // check TLV line
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().tlv_stream[0].tlv_name,
             "networks".to_string()
         );
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().tlv_stream[0].tlv_type,
             1
         );
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().tlv_stream[0]
                 .tlv_data
                 .as_ref()
@@ -86,7 +90,7 @@ mod test {
                 .name,
             "chains".to_string()
         );
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().tlv_stream[0]
                 .tlv_data
                 .as_ref()
@@ -94,7 +98,7 @@ mod test {
                 .value,
             "chain_hash".to_string()
         );
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().tlv_stream[1]
                 .tlv_data
                 .as_ref()
@@ -102,7 +106,7 @@ mod test {
                 .name,
             "data".to_string()
         );
-        debug_assert_eq!(
+        assert_eq!(
             parser.symbol_table.get("init").unwrap().tlv_stream[1]
                 .tlv_data
                 .as_ref()
