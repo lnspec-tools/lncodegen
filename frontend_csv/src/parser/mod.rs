@@ -5,13 +5,20 @@ pub mod parser;
 #[cfg(test)]
 mod test {
 
+    use env_logger::Env;
+
     use crate::parser::ast;
     use crate::parser::parser;
     use crate::scanner::scanner;
     use crate::scanner::token::CSVToken;
 
+    fn init() {
+        env_logger::Builder::from_env(Env::default().default_filter_or("trace")).init();
+    }
+
     #[test]
     fn parse_simple_recursive_line() {
+        init();
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n";
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
@@ -27,6 +34,7 @@ mod test {
     #[test]
     #[should_panic]
     fn parse_simple_failure_line() {
+        init();
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,,gflen\n";
         let char_vec: Vec<char> = contents.chars().collect();
@@ -38,6 +46,8 @@ mod test {
 
     #[test]
     fn parse_simple_recursive_msg() {
+        init();
+
         let contents = "msgtype,init,16\n
         msgdata,init,gflen,u16,
         msgdata,init,globalfeatures,byte,gflen\n
@@ -48,6 +58,7 @@ mod test {
         tlvdata,init_tlvs,networks,chains,chain_hash,...\n
         tlvtype,init_tlvs,remote_addr,3\n
         tlvdata,init_tlvs,remote_addr,data,byte,...\n";
+
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result: Vec<CSVToken> = scanner.scan(&char_vec);

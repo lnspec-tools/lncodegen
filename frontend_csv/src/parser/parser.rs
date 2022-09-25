@@ -1,4 +1,5 @@
 //! Core Parser implementation for the csv tokens
+use log::trace;
 use std::collections::BTreeMap;
 use std::vec::Vec;
 
@@ -58,10 +59,13 @@ impl Parser {
         }
     }
 
-    // This method is to get the lenght of the integer type for bytes field
+    // This method is to get the length of the integer type for bytes field
     // for example:
+    // ```
     // msgdata,init,flen,u16,
     // msgdata,init,features,byte,flen
+    // ```
+    //
     // flen is the length of the bytes field which is the type u16 which is 2 bytes
     // so for features field the lenght is 2 bytes and this method map it together.
     fn get_byte_length(&self, keyword: String) -> u64 {
@@ -92,17 +96,17 @@ impl Parser {
         return 0;
     }
 
-    //// Parse a message data entry
+    /// Parse a message data entry
     ///  msgdata,init,globalfeatures,byte,gflen
     ///  msgdata,init,gflen,u16,
     fn parse_msg_data(&mut self, tokens: &Vec<CSVToken>) {
         self.advance(&tokens); // msgdata
         let msg_data_name = self.advance(&tokens).val.to_string();
-        print!("\n{:?}\n", msg_data_name);
+        trace!("{:?}\n", msg_data_name);
         let msg_data_type = self.advance(&tokens);
-        print!("\n{:?} {:?}\n", self.pos - 1, tokens[self.pos - 1]);
+        trace!("{:?} {:?}\n", self.pos - 1, tokens[self.pos - 1]);
 
-        print!("\n msg type {:?} \n", msg_data_type.ty);
+        trace!("msg type {:?} \n", msg_data_type.ty);
         match msg_data_type.ty {
             CSVTokenType::U16 => self.add_data_lnmsg_buffer(LNMsData::Unsigned16(msg_data_name, 2)),
             CSVTokenType::U32 => self.add_data_lnmsg_buffer(LNMsData::Unsigned32(msg_data_name, 4)),
@@ -116,7 +120,7 @@ impl Parser {
             }
             CSVTokenType::Byte => {
                 let byte_name = self.advance(&tokens).val.to_string();
-                print!("\n bytes name {:?}\n", byte_name);
+                trace!("bytes name {:?}\n", byte_name);
                 let msg_val = self.get_byte_length(byte_name.clone());
                 self.add_data_lnmsg_buffer(LNMsData::BitfieldStream(
                     msg_data_name.clone(),

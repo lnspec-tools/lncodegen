@@ -1,6 +1,5 @@
 use super::token::CSVToken;
 use super::token::CSVTokenType;
-/// Core implementation of the scanner
 use std::collections::HashMap;
 
 pub struct Scanner {
