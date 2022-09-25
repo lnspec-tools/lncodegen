@@ -6,6 +6,7 @@ pub mod parser;
 mod test {
 
     use crate::parser::ast;
+    use crate::parser::ast::LNMsgType;
     use crate::parser::parser;
     use crate::scanner::scanner;
     use crate::scanner::token::CSVToken;
@@ -29,10 +30,11 @@ mod test {
         let result: Vec<CSVToken> = scanner.scan(&char_vec);
         let mut parser = parser::Parser::new();
         parser.parse(&result);
-        debug_assert_eq!(
-            parser.symbol_table.get("init").unwrap().msg_data[0],
-            ast::LNMsData::Uint("u16".to_string())
-        );
+        if let LNMsgType::Msg(msg) = parser.symbol_table.get("init").unwrap() {
+            assert_eq!(msg.msg_data[0], ast::LNMsData::Uint("u16".to_string()));
+        } else {
+            panic!();
+        }
     }
 
     #[test]
@@ -69,16 +71,14 @@ mod test {
         let mut parser = parser::Parser::new();
         parser.parse(&result);
         // check bytes line
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().msg_data[1],
-            ast::LNMsData::BitfieldStream("globalfeatures".to_string(), "2".to_string())
-        );
+        match parser.symbol_table.get("init").unwrap() {
+            LNMsgType::Msg(msg) => assert_eq!(
+                msg.to_owned().msg_data[1],
+                ast::LNMsData::BitfieldStream("globalfeatures".to_string(), "gflen".to_string())
+            ),
+            _ => panic!("wrong value in the symbol table"),
+        }
         // check TLV line
-        assert!(parser
-            .symbol_table
-            .get("init")
-            .unwrap()
-            .tlv_stream
-            .contains_key("init_tlvs"));
+        assert!(parser.symbol_table.contains_key("init_tlvs"));
     }
 }
