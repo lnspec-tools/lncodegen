@@ -145,8 +145,8 @@ mod test {
             },
         ];
         for c in 0..expected.len() - 1 {
-            debug_assert_eq!(result[c].val, expected[c].val);
-            debug_assert_eq!(result[c].ty, expected[c].ty);
+            assert_eq!(result[c].val, expected[c].val);
+            assert_eq!(result[c].ty, expected[c].ty);
         }
     }
 
