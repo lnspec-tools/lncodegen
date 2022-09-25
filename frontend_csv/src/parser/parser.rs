@@ -8,8 +8,10 @@ use crate::parser::ast::LNMsg;
 use crate::parser::ast::LNTlvRecord;
 use crate::scanner::token::{CSVToken, CSVTokenType};
 
+use super::ast::LNMsgType;
+
 pub struct Parser {
-    pub symbol_table: BTreeMap<String, LNMsg>,
+    pub symbol_table: BTreeMap<String, LNMsgType>,
     pos: usize,
 }
 
@@ -20,6 +22,16 @@ impl<'p> Parser {
             pos: 0,
             symbol_table: BTreeMap::new(),
         };
+    }
+
+    fn symbol_table_add_lnmsg(&mut self, msg: &LNMsg) {
+        self.symbol_table
+            .insert(msg.msg_name.to_string(), LNMsgType::Msg(msg.to_owned()));
+    }
+
+    fn symbol_table_add_tlv(&mut self, tlv: &LNTlvRecord) {
+        self.symbol_table
+            .insert(tlv.stream_name.to_string(), LNMsgType::Tlv(tlv.to_owned()));
     }
 
     /// Take the element in the current position of the stream
@@ -86,13 +98,15 @@ impl<'p> Parser {
 
     /// PArse a TLV type declaration
     fn parse_tlv_typ(&mut self, tokens: &'p Vec<CSVToken>) -> LNTlvRecord {
+        assert_eq!(self.advance(tokens).ty, CSVTokenType::TlvType);
         // init_tlvs,networks,1
         match self.peek(&tokens).ty {
             CSVTokenType::LiteralString => {
-                let _ = self.advance(&tokens).val.to_string();
+                let tlv_record_name = self.advance(&tokens).val.to_string();
+                trace!("Record name {:?}", tlv_record_name);
                 let tlv_name = self.advance(tokens).val.to_string();
                 let tlv_type = self.advance(&tokens).val.parse::<u64>().unwrap();
-                LNTlvRecord::new(&tlv_name.as_str(), tlv_type)
+                LNTlvRecord::new(&tlv_record_name.as_str(), &tlv_name.as_str(), tlv_type)
             }
             _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
         }
@@ -100,6 +114,7 @@ impl<'p> Parser {
 
     fn parse_tlv_data(&mut self, record: &mut LNTlvRecord, tokens: &'p Vec<CSVToken>) {
         assert_eq!(self.advance(tokens).ty, CSVTokenType::TlvData);
+        assert_eq!(self.advance(tokens).val, record.stream_name);
         assert_eq!(self.advance(tokens).val, record.type_name);
         let tok_name = self.advance(tokens);
         let tok_ty = self.advance(tokens);
@@ -112,6 +127,11 @@ impl<'p> Parser {
             // FIXME: how we manage this token
             let _ = self.advance(tokens);
         }
+        trace!(
+            "add tlv record inside the stream {:?} - {:?}",
+            tok_name,
+            tok_ty
+        );
         record.add_entry(tok_name.val.as_str(), tok_ty.val.as_str());
     }
 
@@ -125,15 +145,14 @@ impl<'p> Parser {
             }
         }
         trace!("Insert message in the symbol table: {:?}", msg_typ);
-        self.symbol_table
-            .insert(msg_typ.msg_name.clone(), msg_typ.to_owned());
+        self.symbol_table_add_lnmsg(&msg_typ);
     }
 
     fn parse_tlv(&mut self, tokens: &'p Vec<CSVToken>) {
         let mut tlv_typ = self.parse_tlv_typ(tokens);
-        for _ in 0..tlv_typ.type_len {
-            self.parse_tlv_data(&mut tlv_typ, tokens);
-        }
+        trace!("parsing tlv type {:?}", tlv_typ);
+        self.parse_tlv_data(&mut tlv_typ, tokens);
+        self.symbol_table_add_tlv(&tlv_typ);
     }
 
     /// Entry point of the parser!
@@ -145,5 +164,6 @@ impl<'p> Parser {
                 _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
             }
         }
+        trace!("Terminating with Parser: {:?}", self.symbol_table);
     }
 }

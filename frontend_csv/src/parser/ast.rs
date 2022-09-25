@@ -1,7 +1,12 @@
 //! Abstract Syntax Tree implementation
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum LNMsgType {
+    Msg(LNMsg),
+    Tlv(LNTlvRecord),
+}
 
 /// Generic lightning network message
 /// with all the information that we need to implement this
@@ -10,8 +15,6 @@ pub struct LNMsg {
     pub msg_typ: u64,
     pub msg_name: String,
     pub msg_data: Vec<LNMsData>,
-    /// encode the tlv stream.
-    pub tlv_stream: HashMap<String, LNTlvRecord>,
 }
 
 /// All the Msg Data supported by the LN
@@ -32,14 +35,16 @@ pub enum LNMsData {
 /// `[length: value]`
 #[derive(Clone, PartialEq, Debug)]
 pub struct LNTlvRecord {
+    pub stream_name: String,
     pub type_name: String,
     pub type_len: u64,
     pub record_entry: Vec<LNTlvEntry>,
 }
 
 impl LNTlvRecord {
-    pub fn new(name: &str, len: u64) -> Self {
+    pub fn new(stream: &str, name: &str, len: u64) -> Self {
         LNTlvRecord {
+            stream_name: stream.to_string(),
             type_name: name.to_string(),
             type_len: len,
             record_entry: Vec::new(),
@@ -74,16 +79,10 @@ impl LNMsg {
             msg_typ,
             msg_name: msg_name.to_string(),
             msg_data: Vec::new(),
-            tlv_stream: HashMap::new(),
         };
     }
 
     pub fn add_msg_data(&mut self, data: &LNMsData) {
         self.msg_data.push(data.clone());
-    }
-
-    pub fn add_tlv_record(&mut self, key: &str, record: &LNTlvRecord) {
-        assert!(!self.tlv_stream.contains_key(key));
-        self.tlv_stream.insert(key.to_string(), record.to_owned());
     }
 }
