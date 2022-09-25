@@ -201,7 +201,7 @@ impl Scanner {
                     // Here we panic if we found a comma but the current buffer is empty.
                     // to handle situation like double commas in seqence.
                     if current_buffer.is_empty() {
-                        panic!("Empty token between two seperators")
+                        panic!("Empty space between two separator `,` are not allowed")
                     };
                     self.add_token(&mut tokenize, &mut current_buffer)
                 }
