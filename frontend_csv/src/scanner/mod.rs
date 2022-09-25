@@ -12,8 +12,8 @@ mod test {
     #[test]
     fn scan_simple_one() {
         let path_file = std::env::var_os("CSV_PATH").unwrap();
-        let contents =
-            fs::read_to_string(path_file).expect("Something went wrong reading the file");
+        let contents = fs::read_to_string(format!("{}/bolt1.csv", path_file.to_str().unwrap()))
+            .expect("Something went wrong reading the file");
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
@@ -152,7 +152,7 @@ mod test {
 
     // Test for double commas in seqence between 2 tokens
     #[test]
-    #[should_panic(expected = "Empty token between two seperators")]
+    #[should_panic(expected = "Empty space between two separator `,` are not allowed")]
     fn test_empty_middle() {
         let contents = "msgtype,  ,16\n";
         let char_vec: Vec<char> = contents.chars().collect();
@@ -162,7 +162,7 @@ mod test {
 
     // Test for double commas in seqence in front of first token
     #[test]
-    #[should_panic(expected = "Empty token between two seperators")]
+    #[should_panic(expected = "Empty space between two separator `,` are not allowed")]
     fn test_empty_front() {
         let contents = ",,16\n";
         let char_vec: Vec<char> = contents.chars().collect();

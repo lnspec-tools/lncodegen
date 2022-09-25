@@ -30,7 +30,7 @@ jobs:
           command: check
 
       - name: Run cargo test
-        run: export CSV_PATH=${GITHUB_WORKSPACE}/specs/bolt1.csv && cargo test
+        run: export CSV_PATH=${GITHUB_WORKSPACE}/specs && cargo test
 
   lints:
     name: Lints

@@ -10,6 +10,7 @@ mod test {
     use crate::parser::parser;
     use crate::scanner::scanner;
     use crate::scanner::token::CSVToken;
+    use std::fs;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -80,5 +81,19 @@ mod test {
         }
         // check TLV line
         assert!(parser.symbol_table.contains_key("init_tlvs"));
+    }
+
+    #[test]
+    fn parse_bolt7_file() {
+        let path_file = std::env::var_os("CSV_PATH").unwrap();
+        let contents = fs::read_to_string(format!("{}/bolt7.csv", path_file.to_str().unwrap()))
+            .expect("Something went wrong reading the file");
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new();
+        let result = scanner.scan(&char_vec);
+        let mut parser = parser::Parser::new();
+        parser.parse(&result);
+
+        // TODO: make check
     }
 }
