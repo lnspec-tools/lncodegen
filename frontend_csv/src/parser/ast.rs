@@ -1,4 +1,5 @@
 //! Abstract Syntax Tree implementation
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
 
@@ -10,8 +11,7 @@ pub struct LNMsg {
     pub msg_name: String,
     pub msg_data: Vec<LNMsData>,
     /// encode the tlv stream.
-    // FIXME: can be encoded as map?
-    pub tlv_stream: Vec<LNTlvType>,
+    pub tlv_stream: HashMap<String, LNTlvRecord>,
 }
 
 /// All the Msg Data supported by the LN
@@ -25,22 +25,45 @@ pub enum LNMsData {
     TLVinit(String, String),
 }
 
+///
+/// A tlv_record represents a single field, encoded in the form:
+/// `[bigsize: type]`
+/// `[bigsize: length]`
+/// `[length: value]`
 #[derive(Clone, PartialEq, Debug)]
-pub struct LNTlvData {
-    pub name: String,
-    pub value: String,
+pub struct LNTlvRecord {
+    pub type_name: String,
+    pub type_len: u64,
+    pub record_entry: Vec<LNTlvEntry>,
 }
 
-/// Structure that encode
+impl LNTlvRecord {
+    pub fn new(name: &str, len: u64) -> Self {
+        LNTlvRecord {
+            type_name: name.to_string(),
+            type_len: len,
+            record_entry: Vec::new(),
+        }
+    }
+
+    pub fn add_entry(&mut self, name: &str, ty: &str) {
+        self.record_entry.push(LNTlvEntry::new(name, ty));
+    }
+}
+
 #[derive(Clone, PartialEq, Debug)]
-pub struct LNTlvType {
-    pub tlv_type: u64,
-    /// Encode the data as free hex and the client
-    /// that use the code will decode and encode it
-    /// in a particular way.
-    pub tls_type: String,
-    pub tlv_name: String,
-    pub tlv_data: Option<LNTlvData>,
+pub struct LNTlvEntry {
+    pub entry_name: String,
+    pub entry_ty: String,
+}
+
+impl LNTlvEntry {
+    pub fn new(name: &str, ty: &str) -> Self {
+        LNTlvEntry {
+            entry_name: name.to_string(),
+            entry_ty: ty.to_string(),
+        }
+    }
 }
 
 impl LNMsg {
@@ -48,14 +71,19 @@ impl LNMsg {
     /// and type provided.
     pub fn new(msg_typ: u64, msg_name: &str) -> Self {
         return LNMsg {
-            msg_typ: msg_typ,
+            msg_typ,
             msg_name: msg_name.to_string(),
             msg_data: Vec::new(),
-            tlv_stream: Vec::new(),
+            tlv_stream: HashMap::new(),
         };
     }
 
     pub fn add_msg_data(&mut self, data: &LNMsData) {
         self.msg_data.push(data.clone());
+    }
+
+    pub fn add_tlv_record(&mut self, key: &str, record: &LNTlvRecord) {
+        assert!(!self.tlv_stream.contains_key(key));
+        self.tlv_stream.insert(key.to_string(), record.to_owned());
     }
 }

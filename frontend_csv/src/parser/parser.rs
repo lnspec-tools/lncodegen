@@ -5,34 +5,31 @@ use std::vec::Vec;
 
 use crate::parser::ast::LNMsData;
 use crate::parser::ast::LNMsg;
-use crate::parser::ast::LNTlvData;
-use crate::parser::ast::LNTlvType;
+use crate::parser::ast::LNTlvRecord;
 use crate::scanner::token::{CSVToken, CSVTokenType};
 
 pub struct Parser {
     pub symbol_table: BTreeMap<String, LNMsg>,
     pos: usize,
-    lntlv_buffer: Option<LNTlvType>,
 }
 
-impl Parser {
+impl<'p> Parser {
     /// Build a new parser
     pub fn new() -> Self {
         return Parser {
             pos: 0,
             symbol_table: BTreeMap::new(),
-            lntlv_buffer: None,
         };
     }
 
     /// Take the element in the current position of the stream
-    fn peek<'a>(&self, tokens: &'a Vec<CSVToken>) -> &'a CSVToken {
+    fn peek(&self, tokens: &'p Vec<CSVToken>) -> &'p CSVToken {
         return &tokens[self.pos];
     }
 
     /// Take the element in the current position of the stream
     /// and increase the position by one
-    fn advance<'a>(&mut self, tokens: &'a Vec<CSVToken>) -> &'a CSVToken {
+    fn advance(&mut self, tokens: &'p Vec<CSVToken>) -> &'p CSVToken {
         self.pos += 1;
         return &tokens[self.pos - 1];
     }
@@ -41,16 +38,14 @@ impl Parser {
     /// the following one:
     ///
     /// `msgtype,init,16`
-    fn parse_msg_typ(&mut self, tokens: &Vec<CSVToken>) -> LNMsg {
+    fn parse_msg_typ(&mut self, tokens: &'p Vec<CSVToken>) -> LNMsg {
         let msg_name = self.advance(&tokens);
         let msg_type = self.advance(&tokens);
         match msg_type.ty {
-            CSVTokenType::Number => LNMsg {
-                msg_typ: msg_type.val.parse::<u64>().unwrap(),
-                msg_name: msg_name.val.to_string(),
-                msg_data: Vec::new(),
-                tlv_stream: Vec::new(),
-            },
+            CSVTokenType::Number => LNMsg::new(
+                msg_type.val.parse::<u64>().unwrap(),
+                msg_name.val.to_owned().as_str(),
+            ),
             _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
         }
     }
@@ -58,7 +53,7 @@ impl Parser {
     /// Parse a message data entry
     ///  msgdata,init,globalfeatures,byte,gflen
     ///  msgdata,init,gflen,u16,
-    fn parse_msg_data(&mut self, target_msg: &mut LNMsg, tokens: &Vec<CSVToken>) {
+    fn parse_msg_data(&mut self, target_msg: &mut LNMsg, tokens: &'p Vec<CSVToken>) {
         assert!(self.advance(&tokens).ty == CSVTokenType::MsgData);
         assert!(self.advance(&tokens).val == target_msg.msg_name);
 
@@ -90,44 +85,37 @@ impl Parser {
     }
 
     /// PArse a TLV type declaration
-    fn parse_tlv_typ(&mut self, tokens: &Vec<CSVToken>) {
+    fn parse_tlv_typ(&mut self, tokens: &'p Vec<CSVToken>) -> LNTlvRecord {
         // init_tlvs,networks,1
         match self.peek(&tokens).ty {
             CSVTokenType::LiteralString => {
-                let tls_name = self.advance(&tokens).val.to_string();
+                let _ = self.advance(&tokens).val.to_string();
                 let tlv_name = self.advance(tokens).val.to_string();
                 let tlv_type = self.advance(&tokens).val.parse::<u64>().unwrap();
-                self.lntlv_buffer = Some(LNTlvType {
-                    tls_type: tls_name,
-                    tlv_name: tlv_name,
-                    tlv_type: tlv_type,
-                    tlv_data: None,
-                });
+                LNTlvRecord::new(&tlv_name.as_str(), tlv_type)
             }
             _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
         }
     }
 
-    // tlvdata,init_tlvs,networks,chains,chain_hash,...
-    /// parse TLV data entry
-    fn parse_tlv_data(&mut self, tokens: &Vec<CSVToken>) {
-        self.advance(&tokens); // advance tls name
-        self.advance(&tokens); // advance tlv name
+    fn parse_tlv_data(&mut self, record: &mut LNTlvRecord, tokens: &'p Vec<CSVToken>) {
+        assert_eq!(self.advance(tokens).ty, CSVTokenType::TlvData);
+        assert_eq!(self.advance(tokens).val, record.type_name);
+        let tok_name = self.advance(tokens);
+        let tok_ty = self.advance(tokens);
 
-        self.lntlv_buffer.as_mut().unwrap().tlv_data = Some(LNTlvData {
-            name: self.advance(&tokens).val.to_string(),
-            value: self.advance(&tokens).val.to_string(),
-        });
-        if self.peek(&tokens).ty == CSVTokenType::Dotdotdot {
-            self.advance(tokens);
+        if let CSVToken {
+            ty: CSVTokenType::Dotdotdot,
+            ..
+        } = self.peek(tokens)
+        {
+            // FIXME: how we manage this token
+            let _ = self.advance(tokens);
         }
+        record.add_entry(tok_name.val.as_str(), tok_ty.val.as_str());
     }
 
-    fn insert_and_reset_tlv(&mut self) {
-        // TO be refactored!
-    }
-
-    fn parse_msg<'a>(&mut self, tokens: &Vec<CSVToken>) {
+    fn parse_msg(&mut self, tokens: &'p Vec<CSVToken>) {
         assert!(self.advance(tokens).ty == CSVTokenType::MsgTy);
         let mut msg_typ = self.parse_msg_typ(tokens);
         loop {
@@ -141,19 +129,21 @@ impl Parser {
             .insert(msg_typ.msg_name.clone(), msg_typ.to_owned());
     }
 
+    fn parse_tlv(&mut self, tokens: &'p Vec<CSVToken>) {
+        let mut tlv_typ = self.parse_tlv_typ(tokens);
+        for _ in 0..tlv_typ.type_len {
+            self.parse_tlv_data(&mut tlv_typ, tokens);
+        }
+    }
+
     /// Entry point of the parser!
-    pub fn parse(&mut self, tokens: &Vec<CSVToken>) {
+    pub fn parse(&mut self, tokens: &'p Vec<CSVToken>) {
         while self.peek(&tokens).ty != CSVTokenType::EOF {
             match self.peek(&tokens).ty {
                 CSVTokenType::MsgTy => self.parse_msg(tokens),
-                CSVTokenType::TlvType => {
-                    self.insert_and_reset_tlv();
-                    self.parse_tlv_typ(&tokens);
-                }
-                CSVTokenType::TlvData => self.parse_tlv_data(tokens),
+                CSVTokenType::TlvType => self.parse_tlv(&tokens),
                 _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
             }
         }
-        self.insert_and_reset_tlv();
     }
 }

@@ -74,45 +74,11 @@ mod test {
             ast::LNMsData::BitfieldStream("globalfeatures".to_string(), "2".to_string())
         );
         // check TLV line
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().tlv_stream[0].tlv_name,
-            "networks".to_string()
-        );
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().tlv_stream[0].tlv_type,
-            1
-        );
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().tlv_stream[0]
-                .tlv_data
-                .as_ref()
-                .unwrap()
-                .name,
-            "chains".to_string()
-        );
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().tlv_stream[0]
-                .tlv_data
-                .as_ref()
-                .unwrap()
-                .value,
-            "chain_hash".to_string()
-        );
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().tlv_stream[1]
-                .tlv_data
-                .as_ref()
-                .unwrap()
-                .name,
-            "data".to_string()
-        );
-        assert_eq!(
-            parser.symbol_table.get("init").unwrap().tlv_stream[1]
-                .tlv_data
-                .as_ref()
-                .unwrap()
-                .value,
-            "byte".to_string()
-        );
+        assert!(parser
+            .symbol_table
+            .get("init")
+            .unwrap()
+            .tlv_stream
+            .contains_key("init_tlvs"));
     }
 }
