@@ -17,13 +17,11 @@ pub struct LNMsg {
 /// All the Msg Data supported by the LN
 #[derive(Clone, PartialEq, Debug)]
 pub enum LNMsData {
-    Unsigned64(String, u64),
-    Unsigned32(String, u32),
-    Unsigned16(String, u16),
+    Uint(String),
     /// Chain Hash type
     ChainHash(String, String),
     /// The array can be bounded or we can read till the EOF
-    BitfieldStream(String, Option<u64>),
+    BitfieldStream(String, String),
     TLVinit(String, String),
 }
 
@@ -55,5 +53,9 @@ impl LNMsg {
             msg_data: Vec::new(),
             tlv_stream: Vec::new(),
         };
+    }
+
+    pub fn add_msg_data(&mut self, data: &LNMsData) {
+        self.msg_data.push(data.clone());
     }
 }
