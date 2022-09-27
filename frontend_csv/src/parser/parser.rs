@@ -46,6 +46,11 @@ impl<'p> Parser {
         return &tokens[self.pos - 1];
     }
 
+    /// Return the last element insert inside the token view.
+    fn lookup_last(&self, tokens: &'p Vec<CSVToken>) -> Option<&'p CSVToken> {
+        tokens.get(self.pos - 2)
+    }
+
     /// Parse a message type line of the csv file, where the format looks like
     /// the following one:
     ///
@@ -59,6 +64,39 @@ impl<'p> Parser {
                 msg_name.val.to_owned().as_str(),
             ),
             _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
+        }
+    }
+
+    /// peek the next value and check if the next one is not a declaration type,
+    /// in the cvs file is the first token in the line.
+    fn peek_and_check_if_type_declaration(&self, tokens: &'p Vec<CSVToken>) -> bool {
+        let next = self.peek(tokens);
+        match next.ty {
+            CSVTokenType::MsgData
+            | CSVTokenType::MsgTy
+            | CSVTokenType::TlvType
+            | CSVTokenType::TlvData => true,
+            _ => false,
+        }
+    }
+
+    /// Keyword in the normal programming languages can not be reuse, but in the csv case,
+    /// we can have the filed name equal to the type declaration and for this reason we should
+    /// be able to identify when the type is a type declaration or just a filed name.
+    ///
+    /// FIXME: contains a bug in the policy that we are using in this case!
+    fn lookup_same_type(&mut self, tokens: &'p Vec<CSVToken>, ty: &CSVTokenType) -> &'p CSVToken {
+        match self.lookup_last(tokens) {
+            Some(prev_tok) => {
+                if prev_tok.ty == ty.to_owned() {
+                    prev_tok
+                } else if self.peek_and_check_if_type_declaration(tokens) {
+                    prev_tok
+                } else {
+                    self.advance(tokens)
+                }
+            }
+            None => self.advance(tokens),
         }
     }
 
@@ -76,17 +114,49 @@ impl<'p> Parser {
         trace!("Data type after prefix {:?}", token);
 
         let msg_data = match token.ty {
-            CSVTokenType::U16 | CSVTokenType::U32 | CSVTokenType::U64 => {
-                LNMsData::Uint(token.val.parse().unwrap())
+            CSVTokenType::U16 => {
+                let tok = self.lookup_last(tokens).unwrap();
+                LNMsData::Uint16(tok.val.to_owned())
+            }
+            CSVTokenType::U32 => {
+                let tok = self.lookup_last(tokens).unwrap();
+                LNMsData::Uint32(tok.val.to_owned())
+            }
+            CSVTokenType::U64 => {
+                let tok = self.lookup_last(tokens).unwrap();
+                LNMsData::Uint64(tok.val.to_owned())
             }
             CSVTokenType::ChainHash => {
-                let msg_val = self.advance(&tokens);
+                let msg_val = self.lookup_last(tokens).unwrap();
                 LNMsData::ChainHash(msg_data_name, msg_val.val.to_owned())
             }
+            CSVTokenType::ChannelId => {
+                let msg_val = self.lookup_last(tokens).unwrap();
+                LNMsData::ChannelId(msg_val.val.to_owned())
+            }
+            CSVTokenType::Signature => {
+                let msg_val = self.lookup_last(tokens).unwrap();
+                LNMsData::Signature(msg_val.val.to_owned())
+            }
+            CSVTokenType::ShortChannelId => {
+                let msg_val = self.lookup_last(tokens).unwrap();
+                LNMsData::ShortChannelId(msg_val.val.to_owned())
+            }
+            CSVTokenType::Point => {
+                let msg_val = self.lookup_last(tokens).unwrap();
+                LNMsData::Point(msg_val.val.to_owned())
+            }
             CSVTokenType::Byte => {
-                let byte_name = self.advance(&tokens).val.to_string();
-                trace!("bytes name {:?}\n", byte_name);
-                LNMsData::BitfieldStream(msg_data_name.clone(), byte_name)
+                let tok = self.lookup_last(tokens).unwrap();
+                // TODO: this can contains also a single byte if the
+                // next element is not generated
+                let size = if !self.peek_and_check_if_type_declaration(tokens) {
+                    self.advance(tokens).val.to_owned()
+                } else {
+                    "1".to_string()
+                };
+                trace!("bytes name {:?}\n", tok);
+                LNMsData::BitfieldStream(tok.val.to_owned(), size.to_owned())
             }
             // FIXME: this is a start point for a tlv stream
             CSVTokenType::LiteralString => LNMsData::TLVinit(token.val.to_string(), msg_data_name),
@@ -161,7 +231,10 @@ impl<'p> Parser {
             match self.peek(&tokens).ty {
                 CSVTokenType::MsgTy => self.parse_msg(tokens),
                 CSVTokenType::TlvType => self.parse_tlv(&tokens),
-                _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
+                _ => {
+                    trace!("parser status {:?}", self.symbol_table);
+                    panic!("Unknown Token {:?}", self.peek(&tokens))
+                }
             }
         }
         trace!("Terminating with Parser: {:?}", self.symbol_table);

@@ -183,14 +183,9 @@ impl Scanner {
             // Before go on, check if the current buffer is a keyword
             // if yes add the keyword value in the token list.
             if self.keywords.contains_key(current_buffer.as_str()) {
-                tokenize.push(
-                    self.keywords
-                        .get(current_buffer.as_str())
-                        .unwrap()
-                        .to_owned()
-                        .clone(),
-                );
-                current_buffer = String::new();
+                let keyword = self.keywords.get(current_buffer.as_str()).unwrap();
+                tokenize.push(keyword.to_owned());
+                current_buffer.clear();
                 continue;
             }
             // if the current buffer is not a keyword, we check if we are found

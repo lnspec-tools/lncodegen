@@ -32,7 +32,7 @@ mod test {
         let mut parser = parser::Parser::new();
         parser.parse(&result);
         if let LNMsgType::Msg(msg) = parser.symbol_table.get("init").unwrap() {
-            assert_eq!(msg.msg_data[0], ast::LNMsData::Uint("u16".to_string()));
+            assert_eq!(msg.msg_data[0], ast::LNMsData::Uint16("gflen".to_string()));
         } else {
             panic!();
         }

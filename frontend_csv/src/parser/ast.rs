@@ -20,9 +20,16 @@ pub struct LNMsg {
 /// All the Msg Data supported by the LN
 #[derive(Clone, PartialEq, Debug)]
 pub enum LNMsData {
-    Uint(String),
+    Uint16(String),
+    Uint32(String),
+    Uint64(String),
     /// Chain Hash type
     ChainHash(String, String),
+    /// Channel id
+    ChannelId(String),
+    Signature(String),
+    ShortChannelId(String),
+    Point(String),
     /// The array can be bounded or we can read till the EOF
     BitfieldStream(String, String),
     TLVinit(String, String),
