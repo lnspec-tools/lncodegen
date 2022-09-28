@@ -30,7 +30,7 @@ impl Scanner {
                 "subtypedata".to_string(),
                 CSVToken {
                     ty: CSVTokenType::SubMsgData,
-                    val: "subtype".to_string(),
+                    val: "subtypedata".to_string(),
                 },
             ),
             (
@@ -201,6 +201,7 @@ impl Scanner {
                 // The csv grammar contains an ambiguity, so we make this monkey check
                 // to make sure that we are parsing the correct keyword
                 if symbols.get(pos).is_some_and(|sym| sym.is_alphabetic()) {
+                    current_buffer.push(symbols[pos]);
                     continue;
                 }
                 let keyword = self.keywords.get(current_buffer.as_str()).unwrap();
