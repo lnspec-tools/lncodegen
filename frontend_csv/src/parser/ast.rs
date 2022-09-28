@@ -6,6 +6,7 @@ use std::vec::Vec;
 pub enum LNMsgType {
     Msg(LNMsg),
     Tlv(LNTlvRecord),
+    SubType(LNSubType),
 }
 
 /// Generic lightning network message
@@ -15,6 +16,7 @@ pub struct LNMsg {
     pub msg_typ: u64,
     pub msg_name: String,
     pub msg_data: Vec<LNMsData>,
+    pub is_gossip_query: bool,
 }
 
 /// All the Msg Data supported by the LN
@@ -58,8 +60,8 @@ impl LNTlvRecord {
         }
     }
 
-    pub fn add_entry(&mut self, name: &str, ty: &str) {
-        self.record_entry.push(LNTlvEntry::new(name, ty));
+    pub fn add_entry(&mut self, entry: &LNTlvEntry) {
+        self.record_entry.push(entry.to_owned());
     }
 }
 
@@ -67,6 +69,7 @@ impl LNTlvRecord {
 pub struct LNTlvEntry {
     pub entry_name: String,
     pub entry_ty: String,
+    pub encoding: Option<EncodingType>,
 }
 
 impl LNTlvEntry {
@@ -74,8 +77,17 @@ impl LNTlvEntry {
         LNTlvEntry {
             entry_name: name.to_string(),
             entry_ty: ty.to_string(),
+            encoding: None,
         }
     }
+
+    pub fn add_encoding() {}
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct EncodingType {
+    pub ty: String,
+    pub size: String,
 }
 
 impl LNMsg {
@@ -86,10 +98,32 @@ impl LNMsg {
             msg_typ,
             msg_name: msg_name.to_string(),
             msg_data: Vec::new(),
+            is_gossip_query: false,
         };
     }
 
     pub fn add_msg_data(&mut self, data: &LNMsData) {
         self.msg_data.push(data.clone());
+    }
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct LNSubType {
+    pub ty: String,
+    pub ty_data: Vec<LNMsData>,
+}
+
+impl LNSubType {
+    /// create a new subtype
+    pub fn new(ty: &str) -> Self {
+        LNSubType {
+            ty: ty.to_string(),
+            ty_data: Vec::new(),
+        }
+    }
+
+    /// add a new msg data
+    pub fn add_msg_data(&mut self, data: &LNMsData) {
+        self.ty_data.push(data.to_owned())
     }
 }

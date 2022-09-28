@@ -1,5 +1,6 @@
 use super::token::CSVToken;
 use super::token::CSVTokenType;
+use log::trace;
 use std::collections::HashMap;
 
 pub struct Scanner {
@@ -16,6 +17,20 @@ impl Scanner {
                 CSVToken {
                     ty: CSVTokenType::MsgTy,
                     val: "msgtype".to_string(),
+                },
+            ),
+            (
+                "subtype".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::SubTy,
+                    val: "subtype".to_string(),
+                },
+            ),
+            (
+                "subtypedata".to_string(),
+                CSVToken {
+                    ty: CSVTokenType::SubMsgData,
+                    val: "subtype".to_string(),
                 },
             ),
             (
@@ -183,19 +198,26 @@ impl Scanner {
             // Before go on, check if the current buffer is a keyword
             // if yes add the keyword value in the token list.
             if self.keywords.contains_key(current_buffer.as_str()) {
+                // The csv grammar contains an ambiguity, so we make this monkey check
+                // to make sure that we are parsing the correct keyword
+                if symbols.get(pos).is_some_and(|sym| sym.is_alphabetic()) {
+                    continue;
+                }
                 let keyword = self.keywords.get(current_buffer.as_str()).unwrap();
                 tokenize.push(keyword.to_owned());
                 current_buffer.clear();
                 continue;
             }
+
             // if the current buffer is not a keyword, we check if we are found
             // a comma or an end-line token, and if nothing of the previous condition is satisfied
             // we keep putting the token in the current buffer.
             match symbols[pos] {
                 ',' => {
                     // Here we panic if we found a comma but the current buffer is empty.
-                    // to handle situation like double commas in seqence.
+                    // to handle situation like double commas in sequence.
                     if current_buffer.is_empty() {
+                        trace!("current symbol: {}", symbols[pos]);
                         panic!("Empty space between two separator `,` are not allowed")
                     };
                     self.add_token(&mut tokenize, &mut current_buffer)

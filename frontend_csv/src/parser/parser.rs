@@ -3,12 +3,15 @@ use log::trace;
 use std::collections::BTreeMap;
 use std::vec::Vec;
 
+use crate::parser::ast::EncodingType;
 use crate::parser::ast::LNMsData;
 use crate::parser::ast::LNMsg;
+use crate::parser::ast::LNTlvEntry;
 use crate::parser::ast::LNTlvRecord;
 use crate::scanner::token::{CSVToken, CSVTokenType};
 
 use super::ast::LNMsgType;
+use super::ast::LNSubType;
 
 pub struct Parser {
     pub symbol_table: BTreeMap<String, LNMsgType>,
@@ -59,10 +62,17 @@ impl<'p> Parser {
         let msg_name = self.advance(&tokens);
         let msg_type = self.advance(&tokens);
         match msg_type.ty {
-            CSVTokenType::Number => LNMsg::new(
-                msg_type.val.parse::<u64>().unwrap(),
-                msg_name.val.to_owned().as_str(),
-            ),
+            CSVTokenType::Number => {
+                let mut msg = LNMsg::new(
+                    msg_type.val.parse::<u64>().unwrap(),
+                    msg_name.val.to_owned().as_str(),
+                );
+                if self.peek(tokens).val == "gossip_queries" {
+                    msg.is_gossip_query = true;
+                    let _ = self.advance(tokens);
+                }
+                msg
+            }
             _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
         }
     }
@@ -104,7 +114,11 @@ impl<'p> Parser {
     ///  msgdata,init,globalfeatures,byte,gflen
     ///  msgdata,init,gflen,u16,
     fn parse_msg_data(&mut self, target_msg: &mut LNMsg, tokens: &'p Vec<CSVToken>) {
-        assert!(self.advance(&tokens).ty == CSVTokenType::MsgData);
+        assert!(
+            self.peek(tokens).ty == CSVTokenType::MsgData
+                || self.peek(tokens).ty == CSVTokenType::SubMsgData
+        );
+        let _ = self.advance(tokens);
         assert!(self.advance(&tokens).val == target_msg.msg_name);
 
         let token = self.advance(&tokens);
@@ -148,8 +162,6 @@ impl<'p> Parser {
             }
             CSVTokenType::Byte => {
                 let tok = self.lookup_last(tokens).unwrap();
-                // TODO: this can contains also a single byte if the
-                // next element is not generated
                 let size = if !self.peek_and_check_if_type_declaration(tokens) {
                     self.advance(tokens).val.to_owned()
                 } else {
@@ -182,6 +194,18 @@ impl<'p> Parser {
         }
     }
 
+    fn peek_and_check_if_dotdot(&self, tokens: &'p Vec<CSVToken>) -> bool {
+        if let CSVToken {
+            ty: CSVTokenType::Dotdotdot,
+            ..
+        } = self.peek(tokens)
+        {
+            true
+        } else {
+            false
+        }
+    }
+
     fn parse_tlv_data(&mut self, record: &mut LNTlvRecord, tokens: &'p Vec<CSVToken>) {
         assert_eq!(self.advance(tokens).ty, CSVTokenType::TlvData);
         assert_eq!(self.advance(tokens).val, record.stream_name);
@@ -189,20 +213,26 @@ impl<'p> Parser {
         let tok_name = self.advance(tokens);
         let tok_ty = self.advance(tokens);
 
-        if let CSVToken {
-            ty: CSVTokenType::Dotdotdot,
-            ..
-        } = self.peek(tokens)
-        {
+        // TODO: we should support the encoding as different field?
+        let _is_gossip_query = tok_name.val.starts_with("encoded_");
+        let _is_encoding_flag = tok_name.val.eq("encoding_type");
+
+        if self.peek_and_check_if_dotdot(tokens) {
             // FIXME: how we manage this token
             let _ = self.advance(tokens);
         }
+
         trace!(
             "add tlv record inside the stream {:?} - {:?}",
             tok_name,
             tok_ty
         );
-        record.add_entry(tok_name.val.as_str(), tok_ty.val.as_str());
+
+        let mut entry = LNTlvEntry::new(tok_name.val.as_str(), tok_ty.val.as_str());
+        trace!("TLV entry: {:?}", entry);
+        //trace!("TLV encoding: {:?}", encoding_typ);
+        //entry.encoding = encoding_typ;
+        record.add_entry(&entry);
     }
 
     fn parse_msg(&mut self, tokens: &'p Vec<CSVToken>) {
@@ -221,8 +251,35 @@ impl<'p> Parser {
     fn parse_tlv(&mut self, tokens: &'p Vec<CSVToken>) {
         let mut tlv_typ = self.parse_tlv_typ(tokens);
         trace!("parsing tlv type {:?}", tlv_typ);
-        self.parse_tlv_data(&mut tlv_typ, tokens);
+        loop {
+            match self.peek(tokens).ty {
+                CSVTokenType::TlvData => self.parse_tlv_data(&mut tlv_typ, tokens),
+                _ => break,
+            }
+        }
         self.symbol_table_add_tlv(&tlv_typ);
+    }
+
+    fn parse_subtype_ty(&mut self, tokens: &'p Vec<CSVToken>) -> LNSubType {
+        let subtype_name = self.advance(tokens);
+        trace!("parsing subtype name {:?}", subtype_name);
+        LNSubType::new(subtype_name.val.as_str())
+    }
+
+    fn parse_subtype(&mut self, tokens: &'p Vec<CSVToken>) {
+        assert_eq!(self.advance(tokens).ty, CSVTokenType::SubTy);
+        let mut typ = self.parse_subtype_ty(tokens);
+        trace!("parsing subtype");
+
+        // FIXME: remove this trick and decode a real subtype!
+        let mut fake_lnmessage = LNMsg::new(0, "fake");
+        loop {
+            match self.peek(tokens).ty {
+                CSVTokenType::SubMsgData => self.parse_msg_data(&mut fake_lnmessage, tokens),
+                _ => break,
+            }
+        }
+        typ.ty_data = fake_lnmessage.msg_data;
     }
 
     /// Entry point of the parser!
@@ -230,9 +287,12 @@ impl<'p> Parser {
         while self.peek(&tokens).ty != CSVTokenType::EOF {
             match self.peek(&tokens).ty {
                 CSVTokenType::MsgTy => self.parse_msg(tokens),
+                CSVTokenType::SubTy => self.parse_subtype(tokens),
                 CSVTokenType::TlvType => self.parse_tlv(&tokens),
                 _ => {
                     trace!("parser status {:?}", self.symbol_table);
+                    trace!("loop up token {:?}", self.lookup_last(tokens));
+                    trace!("previous token {:?}", tokens.get(self.pos - 1).unwrap());
                     panic!("Unknown Token {:?}", self.peek(&tokens))
                 }
             }

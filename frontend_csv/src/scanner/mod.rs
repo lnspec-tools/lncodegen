@@ -42,6 +42,8 @@ mod test {
                 token::CSVTokenType::Tlvs => assert_eq!(c.val, "tlvs"),
                 token::CSVTokenType::Dotdotdot => assert_eq!(c.val, "..."),
                 token::CSVTokenType::Data => assert_eq!(c.val, "data"),
+                token::CSVTokenType::SubTy => assert_eq!(c.val, "subtype"),
+                token::CSVTokenType::SubMsgData => assert_eq!(c.val, "subtypedata"),
                 token::CSVTokenType::EOF => continue,
             }
         }
@@ -177,6 +179,15 @@ mod test {
     fn test_empty_eof() {
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen";
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new();
+        scanner.scan(&char_vec);
+    }
+
+    #[test]
+    fn test_subtype_parsing() {
+        let contents = "subtype,init \
+                        subtypedata,init,gflen,u16\n";
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         scanner.scan(&char_vec);
