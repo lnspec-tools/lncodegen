@@ -85,6 +85,7 @@ mod test {
 
     #[test]
     fn parse_bolt7_file() {
+        init();
         let path_file = std::env::var_os("CSV_PATH").unwrap();
         let contents = fs::read_to_string(format!("{}/bolt7.csv", path_file.to_str().unwrap()))
             .expect("Something went wrong reading the file");

@@ -1,7 +1,9 @@
 #[derive(Clone, PartialEq, Debug)]
 pub enum CSVTokenType {
     MsgTy,
+    SubTy,
     MsgData,
+    SubMsgData,
     TlvType,
     TlvData,
     ShortChannelId,
