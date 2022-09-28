@@ -186,10 +186,11 @@ mod test {
 
     #[test]
     fn test_subtype_parsing() {
-        let contents = "subtype,init \
+        let contents = "subtype,init, \
                         subtypedata,init,gflen,u16\n";
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        scanner.scan(&char_vec);
+        let tokens = scanner.scan(&char_vec);
+        assert_eq!(tokens.len(), 7);
     }
 }

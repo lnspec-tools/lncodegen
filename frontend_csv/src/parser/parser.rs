@@ -3,7 +3,6 @@ use log::trace;
 use std::collections::BTreeMap;
 use std::vec::Vec;
 
-use crate::parser::ast::EncodingType;
 use crate::parser::ast::LNMsData;
 use crate::parser::ast::LNMsg;
 use crate::parser::ast::LNTlvEntry;
@@ -90,26 +89,6 @@ impl<'p> Parser {
         }
     }
 
-    /// Keyword in the normal programming languages can not be reuse, but in the csv case,
-    /// we can have the filed name equal to the type declaration and for this reason we should
-    /// be able to identify when the type is a type declaration or just a filed name.
-    ///
-    /// FIXME: contains a bug in the policy that we are using in this case!
-    fn lookup_same_type(&mut self, tokens: &'p Vec<CSVToken>, ty: &CSVTokenType) -> &'p CSVToken {
-        match self.lookup_last(tokens) {
-            Some(prev_tok) => {
-                if prev_tok.ty == ty.to_owned() {
-                    prev_tok
-                } else if self.peek_and_check_if_type_declaration(tokens) {
-                    prev_tok
-                } else {
-                    self.advance(tokens)
-                }
-            }
-            None => self.advance(tokens),
-        }
-    }
-
     /// Parse a message data entry
     ///  msgdata,init,globalfeatures,byte,gflen
     ///  msgdata,init,gflen,u16,
@@ -119,7 +98,11 @@ impl<'p> Parser {
                 || self.peek(tokens).ty == CSVTokenType::SubMsgData
         );
         let _ = self.advance(tokens);
-        assert!(self.advance(&tokens).val == target_msg.msg_name);
+        assert!(
+            self.advance(&tokens).val == target_msg.msg_name,
+            "{}",
+            target_msg.msg_name
+        );
 
         let token = self.advance(&tokens);
         let msg_data_name = token.val.to_string();
@@ -228,7 +211,7 @@ impl<'p> Parser {
             tok_ty
         );
 
-        let mut entry = LNTlvEntry::new(tok_name.val.as_str(), tok_ty.val.as_str());
+        let entry = LNTlvEntry::new(tok_name.val.as_str(), tok_ty.val.as_str());
         trace!("TLV entry: {:?}", entry);
         //trace!("TLV encoding: {:?}", encoding_typ);
         //entry.encoding = encoding_typ;
@@ -270,9 +253,8 @@ impl<'p> Parser {
         assert_eq!(self.advance(tokens).ty, CSVTokenType::SubTy);
         let mut typ = self.parse_subtype_ty(tokens);
         trace!("parsing subtype");
-
         // FIXME: remove this trick and decode a real subtype!
-        let mut fake_lnmessage = LNMsg::new(0, "fake");
+        let mut fake_lnmessage = LNMsg::new(0, typ.ty.as_str());
         loop {
             match self.peek(tokens).ty {
                 CSVTokenType::SubMsgData => self.parse_msg_data(&mut fake_lnmessage, tokens),
