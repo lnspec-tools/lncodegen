@@ -8,7 +8,7 @@ use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType, LNSubType, LNTlvReco
 ///
 /// This idea is heavily inspired to LLVM language binding to generate LLVM IR
 /// in a compiler backend.
-trait CodeGen<'g> {
+pub trait CodeGen<'g> {
     fn new(symbol_table: &'g BTreeMap<String, LNMsgType>) -> Self;
 
     /// Build a LN message the correct format for the actual
@@ -116,6 +116,10 @@ trait CodeGen<'g> {
     fn generate_tlv(&mut self, _tlv: &LNTlvRecord) {}
 
     fn generate_subtype(&mut self, _subtyp: &LNSubType) {}
+
+    fn pre_generation(&self);
+
+    fn post_generation(&self) {}
 
     fn generate(&mut self, symbol_table: &'g BTreeMap<String, LNMsgType>) {
         for ast_item in symbol_table.values() {
