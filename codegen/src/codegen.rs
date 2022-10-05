@@ -62,8 +62,8 @@ pub trait CodeGen<'g> {
 
     fn write_bitfiled(&mut self, field: &LNMsData);
 
-    fn generate_encode_fn(&mut self, msg: &LNMsg, symbol_table: &'g BTreeMap<String, LNMsgType>) {
-        self.build_encode_fn();
+    fn generate_decode_fn(&mut self, msg: &LNMsg, symbol_table: &'g BTreeMap<String, LNMsgType>) {
+        self.build_decode_fun();
         for field in &msg.msg_data {
             match field {
                 LNMsData::Uint16(_) => self.build_u16(&field),
@@ -85,11 +85,11 @@ pub trait CodeGen<'g> {
                 _ => panic!("msg data type not supported!"),
             }
         }
-        self.end_encode_fn();
+        self.end_decode_fn();
     }
 
-    fn generate_decode_fn(&mut self, msg: &LNMsg) {
-        self.build_decode_fun();
+    fn generate_encode_fn(&mut self, msg: &LNMsg) {
+        self.build_encode_fn();
         for field in &msg.msg_data {
             match field {
                 LNMsData::Uint16(_) => self.write_u16(&field),
@@ -104,12 +104,13 @@ pub trait CodeGen<'g> {
                 _ => panic!("msg data type not supported!"),
             }
         }
-        self.end_decode_fn();
+        self.end_encode_fn();
     }
 
     fn generate_msg(&mut self, msg: &LNMsg, symbol_table: &'g BTreeMap<String, LNMsgType>) {
         self.build_msg(msg);
-        self.generate_encode_fn(msg, symbol_table);
+        self.generate_encode_fn(msg);
+        self.generate_decode_fn(msg, symbol_table);
         self.end_msg(msg);
     }
 

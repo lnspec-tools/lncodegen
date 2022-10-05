@@ -37,8 +37,10 @@ name = "codegen"
 version = "0.1.0"
 dependencies = [
  "convert_case",
+ "env_logger",
  "frontend_csv",
  "indoc",
+ "log",
 ]
 
 [[package]]

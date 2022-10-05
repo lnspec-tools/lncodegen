@@ -10,7 +10,7 @@
 //! author: Vincenzo Palazzo <vincenzopalazzodev@gmail.com>
 use crate::codegen::CodeGen;
 use convert_case::{Case, Casing};
-use frontend_csv::parser::ast::{LNMsg, LNMsgType};
+use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType};
 use indoc::indoc;
 use std::collections::BTreeMap;
 
@@ -84,27 +84,41 @@ impl<'g> CodeGen<'g> for PythonCodeGen {
     }
 
     fn end_decode_fn(&mut self) {
-        self.close_scope()
+        self.close_scope();
+        self.file_content += "\n\n";
     }
 
     fn build_encode_fn(&mut self) {
         let code = indoc! {"
             def encode(self) -> str:
+                raw_msg = ''
         "};
         self.file_content += self.add_identation_to_code(&code.to_string()).as_str();
         self.open_scope();
     }
 
     fn end_encode_fn(&mut self) {
-        self.close_scope()
+        let code = "return raw_msg";
+        self.file_content += self.add_identation_to_code(&code.to_string()).as_str();
+        self.close_scope();
+        self.file_content += "\n\n";
     }
 
     fn build_u16(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
-        todo!()
+        if let LNMsData::Uint16(name) = field {
+            let code = format!(
+                "self.__u16_{}, raw_msg = U16Int.decode_with_hex_str(raw_msg)",
+                name
+            );
+            self.file_content += self.add_identation_to_code(&code.to_string()).as_str();
+        }
     }
 
     fn write_u16(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
-        todo!()
+        if let LNMsData::Uint16(name) = field {
+            let code = format!("raw_msg += self.__u16_{}.encode()", name);
+            self.file_content += self.add_identation_to_code(&code.to_string()).as_str();
+        }
     }
 
     fn build_u32(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
@@ -124,11 +138,24 @@ impl<'g> CodeGen<'g> for PythonCodeGen {
     }
 
     fn write_bitfiled(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
-        todo!()
+        if let LNMsData::BitfieldStream(name, _) = field {
+            let code = format!(
+                "if self.__bitf_{} => 0:\n \
+                 \t raw_msg = Bitfield.encode(self.__bitf_{})",
+                name, name
+            );
+            self.file_content += self.add_identation_to_code(&code.to_string()).as_str();
+        }
     }
 
-    fn build_bitfield(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {
-        todo!()
+    fn build_bitfield(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+        if let LNMsData::BitfieldStream(name, _) = field {
+            let code = format!(
+                "self.__bitf_{}, raw_msg = Bitfield.decode_with_len(raw_msg)",
+                name
+            );
+            self.file_content += self.add_identation_to_code(&code.to_string()).as_str();
+        }
     }
 
     fn write_point(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
@@ -148,7 +175,7 @@ impl<'g> CodeGen<'g> for PythonCodeGen {
     }
 
     fn build_channel_id(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {
-        todo!()
+        todo!();
     }
 
     fn write_channel_id(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
