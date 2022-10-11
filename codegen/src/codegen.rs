@@ -2,6 +2,7 @@
 use std::collections::BTreeMap;
 
 use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType, LNSubType, LNTlvRecord};
+use log::debug;
 
 /// Code Gen trait that specify all the basic method to create a new
 /// code generation target to encode and decode a lightning network message.
@@ -62,6 +63,10 @@ pub trait CodeGen<'g> {
 
     fn write_bitfiled(&mut self, field: &LNMsData);
 
+    fn build_tlv_stream(&mut self, field: &LNTlvRecord);
+
+    fn write_tlv_stream(&mut self, field: &LNTlvRecord);
+
     fn generate_decode_fn(&mut self, msg: &LNMsg, symbol_table: &'g BTreeMap<String, LNMsgType>) {
         self.build_decode_fun();
         for field in &msg.msg_data {
@@ -77,7 +82,7 @@ pub trait CodeGen<'g> {
                 LNMsData::TLVinit(tlv_name, _) => {
                     let tlv = symbol_table.get(tlv_name).unwrap();
                     if let LNMsgType::Tlv(tlv) = tlv {
-                        self.generate_tlv(&tlv);
+                        self.build_tlv_stream(&tlv);
                     } else {
                         panic!("Wrong type, we should look for a tlv record {:?}", tlv);
                     }
@@ -88,7 +93,7 @@ pub trait CodeGen<'g> {
         self.end_decode_fn();
     }
 
-    fn generate_encode_fn(&mut self, msg: &LNMsg) {
+    fn generate_encode_fn(&mut self, msg: &LNMsg, symbol_table: &'g BTreeMap<String, LNMsgType>) {
         self.build_encode_fn();
         for field in &msg.msg_data {
             match field {
@@ -100,7 +105,15 @@ pub trait CodeGen<'g> {
                 LNMsData::Signature(_) => self.write_signature(&field),
                 LNMsData::Point(_) => self.write_point(&field),
                 LNMsData::BitfieldStream(_, _) => self.write_bitfiled(&field),
-                LNMsData::TLVinit(_, _) => todo!("Still thinking on how to build the tlv"),
+                LNMsData::TLVinit(tlv_name, _) => {
+                    debug!("Generate tlv stream");
+                    let tlv = symbol_table.get(tlv_name).unwrap();
+                    if let LNMsgType::Tlv(tlv) = tlv {
+                        self.write_tlv_stream(&tlv);
+                    } else {
+                        panic!("Wrong type inside the TLV Init {:?}", tlv);
+                    }
+                }
                 _ => panic!("msg data type not supported!"),
             }
         }
@@ -109,7 +122,7 @@ pub trait CodeGen<'g> {
 
     fn generate_msg(&mut self, msg: &LNMsg, symbol_table: &'g BTreeMap<String, LNMsgType>) {
         self.build_msg(msg);
-        self.generate_encode_fn(msg);
+        self.generate_encode_fn(msg, symbol_table);
         self.generate_decode_fn(msg, symbol_table);
         self.end_msg(msg);
     }
@@ -118,16 +131,19 @@ pub trait CodeGen<'g> {
 
     fn generate_subtype(&mut self, _subtyp: &LNSubType) {}
 
-    fn pre_generation(&self);
+    fn pre_generation(&mut self);
 
-    fn post_generation(&self) {}
+    fn post_generation(&mut self) {}
 
     fn generate(&mut self, symbol_table: &'g BTreeMap<String, LNMsgType>) {
+        self.pre_generation();
         for ast_item in symbol_table.values() {
             match ast_item {
                 LNMsgType::Msg(msg) => self.generate_msg(msg, symbol_table),
                 LNMsgType::SubType(sub_typ) => self.generate_subtype(sub_typ),
-                LNMsgType::Tlv(tlv) => self.generate_tlv(tlv),
+                LNMsgType::Tlv(_) => {
+                    debug!("tlv on generate method ignore, and need to be ignore!");
+                }
             }
         }
     }
