@@ -5,14 +5,16 @@ use codegen::python::PythonCodeGen;
 use frontend_csv::parser::parser::Parser;
 use frontend_csv::scanner::scanner::Scanner;
 
+use super::CodeGenError;
+
 pub struct CSVCodeGen {
     pub lang: String,
 }
 
 impl CodeGenMethod for CSVCodeGen {
-    type Error = String;
+    type Error = CodeGenError;
+
     async fn generate(&self, bolt_content: &str) -> Result<String, Self::Error> {
-        let content = String::new();
         let mut scanner = Scanner::new();
         let mut parser = Parser::new();
         let source = bolt_content.chars().collect();
