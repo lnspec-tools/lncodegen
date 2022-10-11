@@ -69,13 +69,13 @@ tlvdata,reply_channel_range_tlvs,timestamps_tlv,encoding_type,byte,
 tlvdata,reply_channel_range_tlvs,timestamps_tlv,encoded_timestamps,byte,...
 tlvtype,reply_channel_range_tlvs,checksums_tlv,3
 tlvdata,reply_channel_range_tlvs,checksums_tlv,checksums,channel_update_checksums,...
-subtype,channel_update_timestamps,
+subtype,channel_update_timestamps
 subtypedata,channel_update_timestamps,timestamp_node_id_1,u32,
 subtypedata,channel_update_timestamps,timestamp_node_id_2,u32,
-subtype,channel_update_checksums,
+subtype,channel_update_checksums
 subtypedata,channel_update_checksums,checksum_node_id_1,u32,
 subtypedata,channel_update_checksums,checksum_node_id_2,u32,
-msgtype,gossip_timestamp_filter,265,gossip_queries,
+msgtype,gossip_timestamp_filter,265,gossip_queries
 msgdata,gossip_timestamp_filter,chain_hash,chain_hash,
 msgdata,gossip_timestamp_filter,first_timestamp,u32,
 msgdata,gossip_timestamp_filter,timestamp_range,u32,
