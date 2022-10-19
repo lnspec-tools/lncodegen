@@ -106,7 +106,6 @@ pub trait CodeGen<'g> {
                 LNMsData::Point(_) => self.write_point(&field),
                 LNMsData::BitfieldStream(_, _) => self.write_bitfiled(&field),
                 LNMsData::TLVinit(tlv_name, _) => {
-                    debug!("Generate tlv stream");
                     let tlv = symbol_table.get(tlv_name).unwrap();
                     if let LNMsgType::Tlv(tlv) = tlv {
                         self.write_tlv_stream(&tlv);
@@ -141,10 +140,11 @@ pub trait CodeGen<'g> {
             match ast_item {
                 LNMsgType::Msg(msg) => self.generate_msg(msg, symbol_table),
                 LNMsgType::SubType(sub_typ) => self.generate_subtype(sub_typ),
-                LNMsgType::Tlv(_) => {
+                LNMsgType::Tlv(tlv) => {
                     debug!("tlv on generate method ignore, and need to be ignore!");
                 }
             }
         }
+        self.post_generation();
     }
 }
