@@ -140,7 +140,7 @@ pub trait CodeGen<'g> {
             match ast_item {
                 LNMsgType::Msg(msg) => self.generate_msg(msg, symbol_table),
                 LNMsgType::SubType(sub_typ) => self.generate_subtype(sub_typ),
-                LNMsgType::Tlv(tlv) => {
+                LNMsgType::Tlv(_) => {
                     debug!("tlv on generate method ignore, and need to be ignore!");
                 }
             }
