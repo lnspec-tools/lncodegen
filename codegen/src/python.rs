@@ -321,6 +321,13 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
             self.class_implementation += self.add_identation_to_code(&code).as_str();
         }
     }
+    fn build_short_channel_id(&mut self, filed: &LNMsData) {
+        todo!()
+    }
+
+    fn write_short_channel_id(&mut self, _: &LNMsData) {
+        todo!()
+    }
 
     fn build_signature(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {
         todo!()
