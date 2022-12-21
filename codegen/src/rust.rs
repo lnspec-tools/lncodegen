@@ -2,7 +2,7 @@
 //! network specification.
 use super::codegen::CodeGen;
 use convert_case::{Case, Casing};
-use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType};
+use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType, LNTlvRecord};
 use std::{collections::BTreeMap, fmt::Display};
 
 pub struct RustCodeGen {
@@ -14,6 +14,12 @@ pub struct RustCodeGen {
 macro_rules! fmt_struct_filed {
     ($name:expr, $ty:expr) => {
         format!("{}: {},\n", $name.as_str(), $ty)
+    };
+}
+
+macro_rules! fmt_struct_filed_with_attr {
+    ($name: expr, $ty: expr, $attr: expr) => {
+        format!("#[{}]\n{}: {},\n", $attr, $name.as_str(), $ty)
     };
 }
 
@@ -61,7 +67,7 @@ impl<'g> CodeGen<'g> for RustCodeGen {
         code += "use lnspec_derive::{DecodeWire, EncodeWire};\n";
         code += "use crate::core::{FromWire, ToWire, IOError};\n";
         code += "use std::io::{Read, Write};\n";
-        //code += "use crate::types::{ChanneId, ChainHash, Point};\n";
+        code += "use crate::types::{ChainHash, ChannelId, Point, Signature};\n";
         self.file_content += code.as_str();
         self.file_content += "\n\n";
     }
@@ -73,7 +79,13 @@ pub struct {} ",
             msg.msg_name.to_case(Case::Pascal)
         );
         self.file_content += code.as_str();
-        self.open_scope()
+        self.open_scope();
+        self.file_content += self
+            .add_identation_to_code(&"#[warn(dead_code)]".to_owned())
+            .as_str();
+        let attr = format!("msg_type={}", msg.msg_typ);
+        let code = fmt_struct_filed_with_attr!("ty".to_owned(), "u16", attr);
+        self.file_content += self.add_identation_to_code(&code).as_str();
     }
 
     fn end_msg(&mut self, _: &LNMsg) {
@@ -117,29 +129,58 @@ pub struct {} ",
 
     fn write_u64(&mut self, _: &LNMsData) {}
 
-    fn build_chain_hash(&mut self, field: &frontend_csv::parser::ast::LNMsData) {}
+    fn build_chain_hash(&mut self, field: &LNMsData) {
+        if let LNMsData::ChainHash(name, _) = field {
+            let code = fmt_struct_filed!(name, "ChainHash");
+            self.file_content += self.add_identation_to_code(&code).as_str();
+        }
+    }
 
-    fn write_chain_hash(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {}
+    fn write_chain_hash(&mut self, _: &LNMsData) {}
 
-    fn build_channel_id(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {}
+    fn build_channel_id(&mut self, filed: &LNMsData) {
+        if let LNMsData::ChannelId(name) = filed {
+            let code = fmt_struct_filed!(name, "ChannelId");
+            self.file_content += self.add_identation_to_code(&code).as_str();
+        }
+    }
 
-    fn write_channel_id(&mut self, field: &frontend_csv::parser::ast::LNMsData) {}
+    fn write_channel_id(&mut self, _: &LNMsData) {}
 
-    fn build_point(&mut self, field: &frontend_csv::parser::ast::LNMsData) {}
+    fn build_short_channel_id(&mut self, filed: &LNMsData) {
+        if let LNMsData::ShortChannelId(name) = filed {
+            let code = fmt_struct_filed!(name, "ShortChannelId");
+            self.file_content += self.add_identation_to_code(&code).as_str();
+        }
+    }
 
-    fn write_point(&mut self, field: &frontend_csv::parser::ast::LNMsData) {}
+    fn write_short_channel_id(&mut self, _: &LNMsData) {}
 
-    fn build_signature(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {}
+    fn build_point(&mut self, field: &LNMsData) {
+        if let LNMsData::Point(name) = field {
+            let code = fmt_struct_filed!(name, "Point");
+            self.file_content += self.add_identation_to_code(&code).as_str();
+        }
+    }
 
-    fn write_signature(&mut self, field: &frontend_csv::parser::ast::LNMsData) {}
+    fn write_point(&mut self, _: &LNMsData) {}
 
-    fn build_tlv_stream(&mut self, field: &frontend_csv::parser::ast::LNTlvRecord) {}
+    fn build_signature(&mut self, filed: &LNMsData) {
+        if let LNMsData::Signature(name) = filed {
+            let code = fmt_struct_filed!(name, "Signature");
+            self.file_content += self.add_identation_to_code(&code).as_str();
+        }
+    }
 
-    fn write_tlv_stream(&mut self, field: &frontend_csv::parser::ast::LNTlvRecord) {}
+    fn write_signature(&mut self, _: &LNMsData) {}
 
-    fn build_bitfield(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {}
+    fn build_tlv_stream(&mut self, _field: &LNTlvRecord) {}
 
-    fn write_bitfiled(&mut self, field: &frontend_csv::parser::ast::LNMsData) {}
+    fn write_tlv_stream(&mut self, _: &LNTlvRecord) {}
+
+    fn build_bitfield(&mut self, _filed: &LNMsData) {}
+
+    fn write_bitfiled(&mut self, _: &LNMsData) {}
 }
 
 impl Display for RustCodeGen {

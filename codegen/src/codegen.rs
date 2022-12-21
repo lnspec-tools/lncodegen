@@ -51,6 +51,10 @@ pub trait CodeGen<'g> {
 
     fn write_channel_id(&mut self, field: &LNMsData);
 
+    fn build_short_channel_id(&mut self, filed: &LNMsData);
+
+    fn write_short_channel_id(&mut self, field: &LNMsData);
+
     fn build_signature(&mut self, filed: &LNMsData);
 
     fn write_signature(&mut self, field: &LNMsData);
@@ -76,6 +80,7 @@ pub trait CodeGen<'g> {
                 LNMsData::Uint64(_) => self.build_u64(&field),
                 LNMsData::ChainHash(_, _) => self.build_chain_hash(&field),
                 LNMsData::ChannelId(_) => self.build_channel_id(&field),
+                LNMsData::ShortChannelId(_) => self.build_short_channel_id(&field),
                 LNMsData::Signature(_) => self.build_signature(&field),
                 LNMsData::Point(_) => self.build_point(&field),
                 LNMsData::BitfieldStream(_, _) => self.build_bitfield(&field),
@@ -102,6 +107,7 @@ pub trait CodeGen<'g> {
                 LNMsData::Uint64(_) => self.write_u64(&field),
                 LNMsData::ChainHash(_, _) => self.write_chain_hash(&field),
                 LNMsData::ChannelId(_) => self.write_channel_id(&field),
+                LNMsData::ShortChannelId(_) => self.write_short_channel_id(&field),
                 LNMsData::Signature(_) => self.write_signature(&field),
                 LNMsData::Point(_) => self.write_point(&field),
                 LNMsData::BitfieldStream(_, _) => self.write_bitfiled(&field),
@@ -113,7 +119,7 @@ pub trait CodeGen<'g> {
                         panic!("Wrong type inside the TLV Init {:?}", tlv);
                     }
                 }
-                _ => panic!("msg data type not supported!"),
+                _ => panic!("msg data type not supported: {:?}", field),
             }
         }
         self.end_encode_fn();
