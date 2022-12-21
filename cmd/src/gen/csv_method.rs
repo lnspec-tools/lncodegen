@@ -2,6 +2,7 @@
 use crate::gen::CodeGenMethod;
 use codegen::codegen::CodeGen;
 use codegen::python::PythonCodeGen;
+use codegen::rust::RustCodeGen;
 use frontend_csv::parser::parser::Parser;
 use frontend_csv::scanner::scanner::Scanner;
 
@@ -23,13 +24,20 @@ impl CodeGenMethod for CSVCodeGen {
 
         let symbol_table = parser.symbol_table;
 
-        let mut codegen = match self.lang.as_str() {
-            "python" | "py" => PythonCodeGen::new(&symbol_table),
+        let content = match self.lang.as_str() {
+            "python" | "py" => {
+                let mut backend = PythonCodeGen::new(&symbol_table);
+                backend.generate(&symbol_table);
+                backend.to_string()
+            }
+            "rust" | "rs" => {
+                let mut backend = RustCodeGen::new(&symbol_table);
+                backend.generate(&symbol_table);
+                backend.to_string()
+            }
             _ => panic!("Language not supported"),
         };
 
-        codegen.generate(&symbol_table);
-        let content = codegen.to_string();
         Ok(content)
     }
 }

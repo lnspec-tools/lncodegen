@@ -1,6 +1,7 @@
 ///! Take AST (-> Verify the validity of the message)? -> Generate code
 pub mod codegen;
 pub mod python;
+pub mod rust;
 
 #[cfg(test)]
 mod test {
