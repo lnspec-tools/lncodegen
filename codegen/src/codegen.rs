@@ -92,7 +92,6 @@ pub trait CodeGen<'g> {
                         panic!("Wrong type, we should look for a tlv record {:?}", tlv);
                     }
                 }
-                _ => panic!("msg data type not supported!"),
             }
         }
         self.end_decode_fn();
@@ -119,7 +118,6 @@ pub trait CodeGen<'g> {
                         panic!("Wrong type inside the TLV Init {:?}", tlv);
                     }
                 }
-                _ => panic!("msg data type not supported: {:?}", field),
             }
         }
         self.end_encode_fn();

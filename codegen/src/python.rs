@@ -252,19 +252,19 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
         }
     }
 
-    fn build_u32(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn build_u32(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn write_u32(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn write_u32(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn build_u64(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn build_u64(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn write_u64(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn write_u64(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
@@ -289,19 +289,19 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
         }
     }
 
-    fn write_point(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn write_point(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn build_point(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn build_point(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn build_chain_hash(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn build_chain_hash(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn write_chain_hash(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {
+    fn write_chain_hash(&mut self, _filed: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
@@ -321,7 +321,7 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
             self.class_implementation += self.add_identation_to_code(&code).as_str();
         }
     }
-    fn build_short_channel_id(&mut self, filed: &LNMsData) {
+    fn build_short_channel_id(&mut self, _filed: &LNMsData) {
         todo!()
     }
 
@@ -329,11 +329,11 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
         todo!()
     }
 
-    fn build_signature(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {
+    fn build_signature(&mut self, _filed: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 
-    fn write_signature(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn write_signature(&mut self, _field: &frontend_csv::parser::ast::LNMsData) {
         todo!()
     }
 

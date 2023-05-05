@@ -63,23 +63,19 @@ impl<'g> CodeGen<'g> for RustCodeGen {
     }
 
     fn pre_generation(&mut self) {
-        let mut code =
-            "// code generated with the lncodegen, please not edit this file.\n".to_owned();
+        let mut code = "// code generated with the lngen, please not edit this file.\n".to_owned();
         code += "use std::io::{Read, Write};\n\n";
         code += "use lnspec_derive::{DecodeWire, EncodeWire};\n\n";
-        code += "use crate::core::{FromWire, ToWire, IOError};\n";
-        code += "use crate::types::{ChainHash, ChannelId, Point, Signature};\n";
+        code += "use crate::core::{FromWire, ToWire};\n";
+        code += "use crate::prelude::*;\n";
         self.file_content += code.as_str();
         self.file_content += "\n\n";
     }
 
     fn build_msg(&mut self, msg: &LNMsg) {
-        let code = format!(
-            "#[derive(DecodeWire, EncodeWire)]
-                pub struct {} ",
-            msg.msg_name.to_case(Case::Pascal)
-        );
-        self.file_content += code.as_str();
+        let mut code = String::from("#[derive(DecodeWire, EncodeWire)]\n");
+        code += &format!("pub struct {} ", msg.msg_name.to_case(Case::Pascal));
+        self.file_content += &code;
         self.open_scope();
         self.file_content += self
             .add_identation_to_code(&"#[warn(dead_code)]".to_owned())
