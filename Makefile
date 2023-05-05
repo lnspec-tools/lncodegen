@@ -28,3 +28,6 @@ spec:
 clean:
 	$(CC) clean
 	@rm -rf specs/*.csv specs/bolts
+
+install:
+	$(CC) install --locked --path ./cmd
