@@ -3,11 +3,14 @@ FMT=fmt
 
 OPTIONS=
 
-default: fmt
+default: fmt clippy
 	$(CC) build
 
 fmt:
 	$(CC) fmt --all
+
+clippy:
+	$(CC) clippy --all --tests
 
 check:
 	$(CC) test --all -- --show-output --nocapture

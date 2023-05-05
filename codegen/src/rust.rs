@@ -29,7 +29,7 @@ impl RustCodeGen {
         let clean_content = String::new();
         content
             .trim()
-            .split("\n")
+            .split('\n')
             .fold(clean_content, |mut content, line| {
                 let formatted_str = "\n".to_owned() + &" ".repeat(self.identation.into()) + line;
                 content.push_str(&formatted_str);

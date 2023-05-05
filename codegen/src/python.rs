@@ -42,7 +42,7 @@ impl PythonCodeGen {
         let clean_content = String::new();
         content
             .trim()
-            .split("\n")
+            .split('\n')
             .fold(clean_content, |mut content, line| {
                 let formatted_str = "\n".to_owned() + &" ".repeat(self.identation.into()) + line;
                 content.push_str(&formatted_str);
@@ -88,29 +88,29 @@ impl PythonCodeGen {
         };
         let mut signature = "def __init__(self, ".to_string();
         for value in &self.fields {
-            let no_keyword = self.transmute_if_keyword(&value);
+            let no_keyword = self.transmute_if_keyword(value);
             signature += format!("{no_keyword}, ").as_str();
             body += format!("self.{value} = {no_keyword}\n").as_str();
         }
-        signature = signature.trim_end().strip_suffix(",").unwrap().to_owned();
+        signature = signature.trim_end().strip_suffix(',').unwrap().to_owned();
         signature += "):\n";
         let mut contructor = self.add_identation_to_code(&signature);
         self.open_scope();
         contructor += self.add_identation_to_code(&body).as_str();
-        let tag = self.close_scope().to_owned();
+        let tag = self.close_scope();
         contructor += tag.as_str();
         self.add_space_between_blocks(&mut contructor);
         contructor
     }
 
     fn initialize_class(&mut self) -> String {
-        let mut msg = self.curr_msg.to_owned().unwrap().clone();
+        let mut msg = self.curr_msg.to_owned().unwrap();
         let class_name = self.build_msg_name(&mut msg);
         let mut params = String::new();
         for param in &self.fields {
             params += format!("{param}, ").as_str();
         }
-        params = params.trim_end().strip_suffix(",").unwrap().to_owned();
+        params = params.trim_end().strip_suffix(',').unwrap().to_owned();
         format!("{class_name}({params})")
     }
 
@@ -185,11 +185,11 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
     }
 
     fn end_msg(&mut self, _msg: &LNMsg) {
-        let tag = self.close_scope().to_owned();
+        let tag = self.close_scope();
         self.class_implementation += format!("{tag}\n").as_str();
         self.file_content += self.class_definition.as_str();
         self.open_scope();
-        let contructor = self.generate_contructor().to_owned();
+        let contructor = self.generate_contructor();
         self.file_content += contructor.as_str();
         self.file_content += self.class_implementation.as_str();
         self.close_scope();
@@ -211,7 +211,7 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
         let init_class = self.initialize_class();
         let code = format!("return {init_class}");
         self.class_implementation += self.add_identation_to_code(&code).as_str();
-        let tag = self.close_scope().to_owned();
+        let tag = self.close_scope();
         self.file_content += tag.as_str();
         self.file_content += "\n\n";
     }
@@ -230,25 +230,25 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
     fn end_encode_fn(&mut self) {
         let code = "return raw_msg";
         self.class_implementation += self.add_identation_to_code(&code.to_string()).as_str();
-        let tag = self.close_scope().to_owned();
+        let tag = self.close_scope();
         self.class_implementation += tag.as_str();
         self.class_implementation += "\n\n";
     }
 
     fn build_u16(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
         if let LNMsData::Uint16(name) = field {
-            let name = self.transmute_if_keyword(&name);
+            let name = self.transmute_if_keyword(name);
             let code = format!("{}, raw_msg = U16Int.decode_with_hex_str(raw_msg)", name);
-            self.class_implementation += self.add_identation_to_code(&code.to_string()).as_str();
-            self.fields.push(name.to_owned());
+            self.class_implementation += self.add_identation_to_code(&code).as_str();
+            self.fields.push(name);
         }
     }
 
     fn write_u16(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
         if let LNMsData::Uint16(name) = field {
-            let name = self.transmute_if_keyword(&name);
+            let name = self.transmute_if_keyword(name);
             let code = format!("raw_msg += '{{}}'.format(self.{}.encode())", name);
-            self.class_implementation += self.add_identation_to_code(&code.to_string()).as_str();
+            self.class_implementation += self.add_identation_to_code(&code).as_str();
         }
     }
 
@@ -270,22 +270,22 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
 
     fn write_bitfiled(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
         if let LNMsData::BitfieldStream(name, _) = field {
-            let name = self.transmute_if_keyword(&name);
+            let name = self.transmute_if_keyword(name);
             let code = format!(
                 "if len(self.{}.bitfield) > 0:\n \
                  \t raw_msg += Bitfield.encode(self.{}.bitfield)",
                 name, name
             );
-            self.class_implementation += self.add_identation_to_code(&code.to_string()).as_str();
+            self.class_implementation += self.add_identation_to_code(&code).as_str();
         }
     }
 
     fn build_bitfield(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
         if let LNMsData::BitfieldStream(name, _) = field {
-            let name = self.transmute_if_keyword(&name);
+            let name = self.transmute_if_keyword(name);
             let code = format!("{name}, raw_msg = Bitfield.decode_with_len(raw_msg)");
-            self.class_implementation += self.add_identation_to_code(&code.to_string()).as_str();
-            self.fields.push(name.to_owned());
+            self.class_implementation += self.add_identation_to_code(&code).as_str();
+            self.fields.push(name);
         }
     }
 
@@ -307,16 +307,16 @@ from lnspec_py.basic_type.tvl_record import TVLRecord
 
     fn build_channel_id(&mut self, filed: &frontend_csv::parser::ast::LNMsData) {
         if let LNMsData::ChannelId(name) = filed {
-            let name = self.transmute_if_keyword(&name);
+            let name = self.transmute_if_keyword(name);
             let code = format!("{name}, raw_msg = ChannelId.decode_from_hex(raw_msg)");
             self.class_implementation += self.add_identation_to_code(&code).as_str();
-            self.fields.push(name.to_owned());
+            self.fields.push(name);
         }
     }
 
     fn write_channel_id(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
         if let LNMsData::ChannelId(name) = field {
-            let name = self.transmute_if_keyword(&name);
+            let name = self.transmute_if_keyword(name);
             let code = format!("raw_msg += self.{name}.encode()");
             self.class_implementation += self.add_identation_to_code(&code).as_str();
         }

@@ -5,8 +5,8 @@ use std::fmt::Display;
 
 use clap::Parser;
 use log::{debug, error};
-use rio_rt::runitime as rio;
 use radicle_term as term;
+use rio_rt::runitime as rio;
 
 mod cmd;
 mod gen;

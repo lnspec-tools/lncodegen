@@ -75,19 +75,19 @@ pub trait CodeGen<'g> {
         self.build_decode_fun();
         for field in &msg.msg_data {
             match field {
-                LNMsData::Uint16(_) => self.build_u16(&field),
-                LNMsData::Uint32(_) => self.build_u32(&field),
-                LNMsData::Uint64(_) => self.build_u64(&field),
-                LNMsData::ChainHash(_, _) => self.build_chain_hash(&field),
-                LNMsData::ChannelId(_) => self.build_channel_id(&field),
-                LNMsData::ShortChannelId(_) => self.build_short_channel_id(&field),
-                LNMsData::Signature(_) => self.build_signature(&field),
-                LNMsData::Point(_) => self.build_point(&field),
-                LNMsData::BitfieldStream(_, _) => self.build_bitfield(&field),
+                LNMsData::Uint16(_) => self.build_u16(field),
+                LNMsData::Uint32(_) => self.build_u32(field),
+                LNMsData::Uint64(_) => self.build_u64(field),
+                LNMsData::ChainHash(_, _) => self.build_chain_hash(field),
+                LNMsData::ChannelId(_) => self.build_channel_id(field),
+                LNMsData::ShortChannelId(_) => self.build_short_channel_id(field),
+                LNMsData::Signature(_) => self.build_signature(field),
+                LNMsData::Point(_) => self.build_point(field),
+                LNMsData::BitfieldStream(_, _) => self.build_bitfield(field),
                 LNMsData::TLVinit(tlv_name, _) => {
                     let tlv = symbol_table.get(tlv_name).unwrap();
                     if let LNMsgType::Tlv(tlv) = tlv {
-                        self.build_tlv_stream(&tlv);
+                        self.build_tlv_stream(tlv);
                     } else {
                         panic!("Wrong type, we should look for a tlv record {:?}", tlv);
                     }
@@ -101,19 +101,19 @@ pub trait CodeGen<'g> {
         self.build_encode_fn();
         for field in &msg.msg_data {
             match field {
-                LNMsData::Uint16(_) => self.write_u16(&field),
-                LNMsData::Uint32(_) => self.write_u32(&field),
-                LNMsData::Uint64(_) => self.write_u64(&field),
-                LNMsData::ChainHash(_, _) => self.write_chain_hash(&field),
-                LNMsData::ChannelId(_) => self.write_channel_id(&field),
-                LNMsData::ShortChannelId(_) => self.write_short_channel_id(&field),
-                LNMsData::Signature(_) => self.write_signature(&field),
-                LNMsData::Point(_) => self.write_point(&field),
-                LNMsData::BitfieldStream(_, _) => self.write_bitfiled(&field),
+                LNMsData::Uint16(_) => self.write_u16(field),
+                LNMsData::Uint32(_) => self.write_u32(field),
+                LNMsData::Uint64(_) => self.write_u64(field),
+                LNMsData::ChainHash(_, _) => self.write_chain_hash(field),
+                LNMsData::ChannelId(_) => self.write_channel_id(field),
+                LNMsData::ShortChannelId(_) => self.write_short_channel_id(field),
+                LNMsData::Signature(_) => self.write_signature(field),
+                LNMsData::Point(_) => self.write_point(field),
+                LNMsData::BitfieldStream(_, _) => self.write_bitfiled(field),
                 LNMsData::TLVinit(tlv_name, _) => {
                     let tlv = symbol_table.get(tlv_name).unwrap();
                     if let LNMsgType::Tlv(tlv) = tlv {
-                        self.write_tlv_stream(&tlv);
+                        self.write_tlv_stream(tlv);
                     } else {
                         panic!("Wrong type inside the TLV Init {:?}", tlv);
                     }
