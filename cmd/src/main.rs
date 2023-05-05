@@ -1,3 +1,4 @@
+#![allow(incomplete_features)]
 #![feature(async_fn_in_trait)]
 #![feature(associated_type_defaults)]
 use std::fmt::Display;

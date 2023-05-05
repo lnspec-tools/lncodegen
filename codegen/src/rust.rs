@@ -6,6 +6,7 @@ use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType, LNTlvRecord};
 use std::{collections::BTreeMap, fmt::Display};
 
 pub struct RustCodeGen {
+    #[allow(dead_code)]
     symbol_table: BTreeMap<String, LNMsgType>,
     file_content: String,
     identation: u16,
@@ -64,9 +65,9 @@ impl<'g> CodeGen<'g> for RustCodeGen {
     fn pre_generation(&mut self) {
         let mut code =
             "// code generated with the lncodegen, please not edit this file.\n".to_owned();
-        code += "use lnspec_derive::{DecodeWire, EncodeWire};\n";
+        code += "use std::io::{Read, Write};\n\n";
+        code += "use lnspec_derive::{DecodeWire, EncodeWire};\n\n";
         code += "use crate::core::{FromWire, ToWire, IOError};\n";
-        code += "use std::io::{Read, Write};\n";
         code += "use crate::types::{ChainHash, ChannelId, Point, Signature};\n";
         self.file_content += code.as_str();
         self.file_content += "\n\n";
@@ -75,7 +76,7 @@ impl<'g> CodeGen<'g> for RustCodeGen {
     fn build_msg(&mut self, msg: &LNMsg) {
         let code = format!(
             "#[derive(DecodeWire, EncodeWire)]
-pub struct {} ",
+                pub struct {} ",
             msg.msg_name.to_case(Case::Pascal)
         );
         self.file_content += code.as_str();

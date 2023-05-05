@@ -1,9 +1,10 @@
 // code generated with the lncodegen, please not edit this file.
-use lnspec_derive::{DecodeWire, EncodeWire};
-use crate::core::{FromWire, ToWire, IOError};
 use std::io::{Read, Write};
-use crate::types::{ChainHash, ChannelId, Point, Signature};
 
+use lnspec_derive::{DecodeWire, EncodeWire};
+
+use crate::types::{ChainHash, ChannelId, Point, Signature};
+use crate::core::{FromWire, ToWire, IOError};
 
 #[derive(DecodeWire, EncodeWire)]
 pub struct Error {
@@ -43,4 +44,3 @@ pub struct Warning {
     channel_id: ChannelId,
     len: u16,
 }
-

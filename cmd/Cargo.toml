@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.0.12", features = [ "derive" ] }
 async-std = "1.12.0"
-rio_rt = "0.1.0-alpha.2"
+rio_rt = { git = "https://github.com/vincenzopalazzo/rio.git" }
 log = "0.4"
 env_logger = "0.9.1"
 frontend_csv = { path = "../frontend_csv/" }

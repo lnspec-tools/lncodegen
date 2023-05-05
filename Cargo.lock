@@ -540,8 +540,7 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 [[package]]
 name = "rio_rt"
 version = "0.1.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a3b5e16ee2dbadfa45d8023dfb6f0897c2e832d1cc55cb8b58fc61654a41b4b"
+source = "git+https://github.com/vincenzopalazzo/rio.git#79ffb6fd40ca9dfe35c5bd729f70936c6d1a30de"
 dependencies = [
  "log",
 ]

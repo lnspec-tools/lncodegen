@@ -1,12 +1,15 @@
 // code generated with the lncodegen, please not edit this file.
-use lnspec_derive::{DecodeWire, EncodeWire};
-use crate::core::{FromWire, ToWire, IOError};
 use std::io::{Read, Write};
+
+use lnspec_derive::{DecodeWire, EncodeWire};
+
+use crate::core::{FromWire, ToWire, IOError};
 use crate::types::{ChainHash, ChannelId, Point, Signature};
 
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct AnnouncementSignatures {
+                pub struct AnnouncementSignatures {
+    #[warn(dead_code)]
     #[msg_type=259]
     ty: u16,
     channel_id: ChannelId,
@@ -16,7 +19,8 @@ pub struct AnnouncementSignatures {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct ChannelAnnouncement {
+                pub struct ChannelAnnouncement {
+    #[warn(dead_code)]
     #[msg_type=256]
     ty: u16,
     node_signature_1: Signature,
@@ -33,7 +37,8 @@ pub struct ChannelAnnouncement {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct ChannelUpdate {
+                pub struct ChannelUpdate {
+    #[warn(dead_code)]
     #[msg_type=258]
     ty: u16,
     signature: Signature,
@@ -48,7 +53,8 @@ pub struct ChannelUpdate {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct GossipTimestampFilter {
+                pub struct GossipTimestampFilter {
+    #[warn(dead_code)]
     #[msg_type=265]
     ty: u16,
     chain_hash: ChainHash,
@@ -57,7 +63,8 @@ pub struct GossipTimestampFilter {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct NodeAnnouncement {
+                pub struct NodeAnnouncement {
+    #[warn(dead_code)]
     #[msg_type=257]
     ty: u16,
     signature: Signature,
@@ -68,7 +75,8 @@ pub struct NodeAnnouncement {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct QueryChannelRange {
+                pub struct QueryChannelRange {
+    #[warn(dead_code)]
     #[msg_type=263]
     ty: u16,
     chain_hash: ChainHash,
@@ -77,7 +85,8 @@ pub struct QueryChannelRange {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct QueryShortChannelIds {
+                pub struct QueryShortChannelIds {
+    #[warn(dead_code)]
     #[msg_type=261]
     ty: u16,
     chain_hash: ChainHash,
@@ -85,7 +94,8 @@ pub struct QueryShortChannelIds {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct ReplyChannelRange {
+                pub struct ReplyChannelRange {
+    #[warn(dead_code)]
     #[msg_type=264]
     ty: u16,
     chain_hash: ChainHash,
@@ -95,7 +105,8 @@ pub struct ReplyChannelRange {
 }
 
 #[derive(DecodeWire, EncodeWire)]
-pub struct ReplyShortChannelIdsEnd {
+                pub struct ReplyShortChannelIdsEnd {
+    #[warn(dead_code)]
     #[msg_type=262]
     ty: u16,
     chain_hash: ChainHash,
