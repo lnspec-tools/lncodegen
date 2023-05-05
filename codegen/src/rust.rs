@@ -25,7 +25,7 @@ macro_rules! fmt_struct_filed_with_attr {
 }
 
 impl RustCodeGen {
-    fn add_identation_to_code(&self, content: &String) -> String {
+    fn add_identation_to_code(&self, content: &str) -> String {
         let clean_content = String::new();
         content
             .trim()
@@ -49,7 +49,7 @@ impl RustCodeGen {
             self.identation
         );
         self.identation -= 4;
-        self.add_identation_to_code(&"\n}".to_string())
+        self.add_identation_to_code("\n}")
     }
 }
 
@@ -77,9 +77,7 @@ impl<'g> CodeGen<'g> for RustCodeGen {
         code += &format!("pub struct {} ", msg.msg_name.to_case(Case::Pascal));
         self.file_content += &code;
         self.open_scope();
-        self.file_content += self
-            .add_identation_to_code(&"#[warn(dead_code)]".to_owned())
-            .as_str();
+        self.file_content += &self.add_identation_to_code("#[warn(dead_code)]");
         let attr = format!("msg_type={}", msg.msg_typ);
         let code = fmt_struct_filed_with_attr!("ty".to_owned(), "u16", attr);
         self.file_content += self.add_identation_to_code(&code).as_str();

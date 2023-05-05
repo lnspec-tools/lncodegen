@@ -1,7 +1,6 @@
 //! Core Parser implementation for the csv tokens
 use log::trace;
 use std::collections::BTreeMap;
-use std::vec::Vec;
 
 use crate::parser::ast::LNMsData;
 use crate::parser::ast::LNMsg;
@@ -17,13 +16,19 @@ pub struct Parser {
     pos: usize,
 }
 
-impl<'p> Parser {
+impl Default for Parser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Parser {
     /// Build a new parser
     pub fn new() -> Self {
-        return Parser {
+        Self {
             pos: 0,
             symbol_table: BTreeMap::new(),
-        };
+        }
     }
 
     fn symbol_table_add_lnmsg(&mut self, msg: &LNMsg) {
@@ -37,19 +42,19 @@ impl<'p> Parser {
     }
 
     /// Take the element in the current position of the stream
-    fn peek(&self, tokens: &'p Vec<CSVToken>) -> &'p CSVToken {
-        return &tokens[self.pos];
+    fn peek<'p>(&self, tokens: &'p [CSVToken]) -> &'p CSVToken {
+        &tokens[self.pos]
     }
 
     /// Take the element in the current position of the stream
     /// and increase the position by one
-    fn advance(&mut self, tokens: &'p Vec<CSVToken>) -> &'p CSVToken {
+    fn advance<'p>(&mut self, tokens: &'p [CSVToken]) -> &'p CSVToken {
         self.pos += 1;
-        return &tokens[self.pos - 1];
+        &tokens[self.pos - 1]
     }
 
     /// Return the last element insert inside the token view.
-    fn lookup_last(&self, tokens: &'p Vec<CSVToken>) -> Option<&'p CSVToken> {
+    fn lookup_last<'p>(&self, tokens: &'p [CSVToken]) -> Option<&'p CSVToken> {
         tokens.get(self.pos - 2)
     }
 
@@ -57,9 +62,9 @@ impl<'p> Parser {
     /// the following one:
     ///
     /// `msgtype,init,16`
-    fn parse_msg_typ(&mut self, tokens: &'p Vec<CSVToken>) -> LNMsg {
-        let msg_name = self.advance(&tokens);
-        let msg_type = self.advance(&tokens);
+    fn parse_msg_typ(&mut self, tokens: &[CSVToken]) -> LNMsg {
+        let msg_name = self.advance(tokens);
+        let msg_type = self.advance(tokens);
         match msg_type.ty {
             CSVTokenType::Number => {
                 let mut msg = LNMsg::new(
@@ -72,42 +77,42 @@ impl<'p> Parser {
                 }
                 msg
             }
-            _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
+            _ => panic!("Unknown Token {:?}", self.peek(tokens)),
         }
     }
 
     /// peek the next value and check if the next one is not a declaration type,
     /// in the cvs file is the first token in the line.
-    fn peek_and_check_if_type_declaration(&self, tokens: &'p Vec<CSVToken>) -> bool {
+    fn peek_and_check_if_type_declaration(&self, tokens: &[CSVToken]) -> bool {
         let next = self.peek(tokens);
-        match next.ty {
+        matches!(
+            next.ty,
             CSVTokenType::MsgData
-            | CSVTokenType::MsgTy
-            | CSVTokenType::TlvType
-            | CSVTokenType::TlvData => true,
-            _ => false,
-        }
+                | CSVTokenType::MsgTy
+                | CSVTokenType::TlvType
+                | CSVTokenType::TlvData,
+        )
     }
 
     /// Parse a message data entry
     ///  msgdata,init,globalfeatures,byte,gflen
     ///  msgdata,init,gflen,u16,
-    fn parse_msg_data(&mut self, target_msg: &mut LNMsg, tokens: &'p Vec<CSVToken>) {
+    fn parse_msg_data(&mut self, target_msg: &mut LNMsg, tokens: &[CSVToken]) {
         assert!(
             self.peek(tokens).ty == CSVTokenType::MsgData
                 || self.peek(tokens).ty == CSVTokenType::SubMsgData
         );
         let _ = self.advance(tokens);
         assert!(
-            self.advance(&tokens).val == target_msg.msg_name,
+            self.advance(tokens).val == target_msg.msg_name,
             "{}",
             target_msg.msg_name
         );
 
-        let token = self.advance(&tokens);
+        let token = self.advance(tokens);
         let msg_data_name = token.val.to_string();
         trace!("Data token after prefix: {:?}", token);
-        let token = self.advance(&tokens);
+        let token = self.advance(tokens);
         trace!("Data type after prefix {:?}", token);
 
         let msg_data = match token.ty {
@@ -151,7 +156,7 @@ impl<'p> Parser {
                     "1".to_string()
                 };
                 trace!("bytes name {:?}\n", tok);
-                LNMsData::BitfieldStream(tok.val.to_owned(), size.to_owned())
+                LNMsData::BitfieldStream(tok.val.to_owned(), size)
             }
             // FIXME: this is a start point for a tlv stream
             CSVTokenType::LiteralString => LNMsData::TLVinit(token.val.to_string(), msg_data_name),
@@ -162,34 +167,32 @@ impl<'p> Parser {
     }
 
     /// PArse a TLV type declaration
-    fn parse_tlv_typ(&mut self, tokens: &'p Vec<CSVToken>) -> LNTlvRecord {
+    fn parse_tlv_typ(&mut self, tokens: &[CSVToken]) -> LNTlvRecord {
         assert_eq!(self.advance(tokens).ty, CSVTokenType::TlvType);
         // init_tlvs,networks,1
-        match self.peek(&tokens).ty {
+        match self.peek(tokens).ty {
             CSVTokenType::LiteralString => {
-                let tlv_record_name = self.advance(&tokens).val.to_string();
+                let tlv_record_name = self.advance(tokens).val.to_string();
                 trace!("Record name {:?}", tlv_record_name);
                 let tlv_name = self.advance(tokens).val.to_string();
-                let tlv_type = self.advance(&tokens).val.parse::<u64>().unwrap();
-                LNTlvRecord::new(&tlv_record_name.as_str(), &tlv_name.as_str(), tlv_type)
+                let tlv_type = self.advance(tokens).val.parse::<u64>().unwrap();
+                LNTlvRecord::new(&tlv_record_name, &tlv_name, tlv_type)
             }
-            _ => panic!("Unknown Token {:?}", self.peek(&tokens)),
+            _ => panic!("Unknown Token {:?}", self.peek(tokens)),
         }
     }
 
-    fn peek_and_check_if_dotdot(&self, tokens: &'p Vec<CSVToken>) -> bool {
-        if let CSVToken {
+    fn peek_and_check_if_dotdot(&self, tokens: &[CSVToken]) -> bool {
+        let CSVToken {
             ty: CSVTokenType::Dotdotdot,
             ..
-        } = self.peek(tokens)
-        {
-            true
-        } else {
-            false
-        }
+        } = self.peek(tokens) else {
+            return false;
+        };
+        true
     }
 
-    fn parse_tlv_data(&mut self, record: &mut LNTlvRecord, tokens: &'p Vec<CSVToken>) {
+    fn parse_tlv_data(&mut self, record: &mut LNTlvRecord, tokens: &[CSVToken]) {
         assert_eq!(self.advance(tokens).ty, CSVTokenType::TlvData);
         assert_eq!(self.advance(tokens).val, record.stream_name);
         assert_eq!(self.advance(tokens).val, record.type_name);
@@ -218,64 +221,55 @@ impl<'p> Parser {
         record.add_entry(&entry);
     }
 
-    fn parse_msg(&mut self, tokens: &'p Vec<CSVToken>) {
+    fn parse_msg(&mut self, tokens: &[CSVToken]) {
         assert!(self.advance(tokens).ty == CSVTokenType::MsgTy);
         let mut msg_typ = self.parse_msg_typ(tokens);
-        loop {
-            match self.peek(tokens).ty {
-                CSVTokenType::MsgData => self.parse_msg_data(&mut msg_typ, tokens),
-                _ => break,
-            }
+        while let CSVTokenType::MsgData = self.peek(tokens).ty {
+            self.parse_msg_data(&mut msg_typ, tokens);
         }
         trace!("Insert message in the symbol table: {:?}", msg_typ);
         self.symbol_table_add_lnmsg(&msg_typ);
     }
 
-    fn parse_tlv(&mut self, tokens: &'p Vec<CSVToken>) {
+    fn parse_tlv(&mut self, tokens: &[CSVToken]) {
         let mut tlv_typ = self.parse_tlv_typ(tokens);
         trace!("parsing tlv type {:?}", tlv_typ);
-        loop {
-            match self.peek(tokens).ty {
-                CSVTokenType::TlvData => self.parse_tlv_data(&mut tlv_typ, tokens),
-                _ => break,
-            }
+        while let CSVTokenType::TlvData = self.peek(tokens).ty {
+            self.parse_tlv_data(&mut tlv_typ, tokens);
         }
         self.symbol_table_add_tlv(&tlv_typ);
     }
 
-    fn parse_subtype_ty(&mut self, tokens: &'p Vec<CSVToken>) -> LNSubType {
+    fn parse_subtype_ty(&mut self, tokens: &[CSVToken]) -> LNSubType {
         let subtype_name = self.advance(tokens);
         trace!("parsing subtype name {:?}", subtype_name);
         LNSubType::new(subtype_name.val.as_str())
     }
 
-    fn parse_subtype(&mut self, tokens: &'p Vec<CSVToken>) {
+    fn parse_subtype(&mut self, tokens: &[CSVToken]) {
         assert_eq!(self.advance(tokens).ty, CSVTokenType::SubTy);
         let mut typ = self.parse_subtype_ty(tokens);
         trace!("parsing subtype");
         // FIXME: remove this trick and decode a real subtype!
         let mut fake_lnmessage = LNMsg::new(0, typ.ty.as_str());
-        loop {
-            match self.peek(tokens).ty {
-                CSVTokenType::SubMsgData => self.parse_msg_data(&mut fake_lnmessage, tokens),
-                _ => break,
-            }
+        while let CSVTokenType::SubMsgData = self.peek(tokens).ty {
+            self.parse_msg_data(&mut fake_lnmessage, tokens);
         }
         typ.ty_data = fake_lnmessage.msg_data;
     }
 
     /// Entry point of the parser!
-    pub fn parse(&mut self, tokens: &'p Vec<CSVToken>) {
-        while self.peek(&tokens).ty != CSVTokenType::EOF {
-            match self.peek(&tokens).ty {
+    pub fn parse(&mut self, tokens: &[CSVToken]) {
+        while self.peek(tokens).ty != CSVTokenType::EOF {
+            match self.peek(tokens).ty {
                 CSVTokenType::MsgTy => self.parse_msg(tokens),
                 CSVTokenType::SubTy => self.parse_subtype(tokens),
-                CSVTokenType::TlvType => self.parse_tlv(&tokens),
+                CSVTokenType::TlvType => self.parse_tlv(tokens),
                 _ => {
                     trace!("parser status {:?}", self.symbol_table);
                     trace!("loop up token {:?}", self.lookup_last(tokens));
                     trace!("previous token {:?}", tokens.get(self.pos - 1).unwrap());
-                    panic!("Unknown Token {:?}", self.peek(&tokens))
+                    panic!("Unknown Token {:?}", self.peek(tokens))
                 }
             }
         }

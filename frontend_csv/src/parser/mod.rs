@@ -1,5 +1,6 @@
 /// Parse implementation!
 pub mod ast;
+#[allow(clippy::module_inception)]
 pub mod parser;
 
 #[cfg(test)]

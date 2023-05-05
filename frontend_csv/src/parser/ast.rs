@@ -94,12 +94,12 @@ impl LNMsg {
     /// Build a new lightning network message with the name
     /// and type provided.
     pub fn new(msg_typ: u64, msg_name: &str) -> Self {
-        return LNMsg {
+        Self {
             msg_typ,
             msg_name: msg_name.to_string(),
             msg_data: Vec::new(),
             is_gossip_query: false,
-        };
+        }
     }
 
     pub fn add_msg_data(&mut self, data: &LNMsData) {

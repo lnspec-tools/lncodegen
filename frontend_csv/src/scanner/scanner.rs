@@ -8,6 +8,12 @@ pub struct Scanner {
     keywords: HashMap<String, CSVToken>,
 }
 
+impl Default for Scanner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Scanner {
     pub fn new() -> Scanner {
         // mapping table for keywords to CSVTokenType
@@ -167,8 +173,7 @@ impl Scanner {
                 },
             ),
         ]);
-        let line = 1;
-        return Scanner { line, keywords };
+        Scanner { line: 1, keywords }
     }
 
     pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &mut String) {
@@ -243,6 +248,6 @@ impl Scanner {
             ty: CSVTokenType::EOF,
             val: "EOF".to_string(),
         });
-        return tokenize;
+        tokenize
     }
 }

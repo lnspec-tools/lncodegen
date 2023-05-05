@@ -1,3 +1,4 @@
+#[allow(clippy::module_inception)]
 pub mod scanner;
 /// Scanner implementation!
 pub mod token;
@@ -17,7 +18,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
         for c in result {
             match c.ty {
                 token::CSVTokenType::MsgTy => assert_eq!(c.val, "msgtype"),
@@ -56,7 +57,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
         let expected = vec![
             token::CSVToken {
                 ty: token::CSVTokenType::MsgTy,
@@ -85,7 +86,7 @@ mod test {
         let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
         let result = scanner.scan(&char_vec);
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
         let expected = vec![
             token::CSVToken {
                 ty: token::CSVTokenType::MsgData,
@@ -119,7 +120,7 @@ mod test {
         let mut scanner = scanner::Scanner::new();
         let mut result = scanner.scan(&char_vec);
         result.reverse();
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
         let expected = vec![
             token::CSVToken {
                 ty: token::CSVTokenType::EOF,
