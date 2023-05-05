@@ -4,8 +4,9 @@
 use std::fmt::Display;
 
 use clap::Parser;
-use log::{debug, error, info};
+use log::{debug, error};
 use rio_rt::runitime as rio;
+use radicle_term as term;
 
 mod cmd;
 mod gen;
@@ -50,7 +51,7 @@ impl From<crate::gen::CodeGenError> for DispachError {
 
 async fn dispach_cmd(args: &Cli) -> Result<(), DispachError> {
     match &args.command {
-        Commands::Gen {
+        Commands::Generate {
             bolt,
             to: result_path,
         } => {
@@ -58,18 +59,28 @@ async fn dispach_cmd(args: &Cli) -> Result<(), DispachError> {
                 return Err(DispachError::new(format!("error: {err}").as_str()));
             }
             let file_content = async_std::fs::read_to_string(bolt).await?;
+            let lang = args.lang.clone().unwrap();
             let generator = CSVCodeGen {
-                lang: args.lang.to_owned(),
+                lang: lang.to_owned(),
             };
             let result = generator.generate(file_content.as_str()).await?;
-            info!(
-                "Generate {} to {}",
-                args.lang,
+            term::success!(
+                "Generate {lang} to {}",
                 result_path.as_os_str().to_str().unwrap()
             );
             if let Err(err) = async_std::fs::write(result_path, result).await {
                 return Err(DispachError::from(err));
             }
+            Ok(())
+        }
+        Commands::Decode { from } => {
+            use fundamentals::bolt::bolt1::Init;
+            use fundamentals::core::FromWire;
+            use std::io::BufReader;
+            let bytes = hex::decode(from).expect("error while decoding hex to bytes");
+            let mut reader = BufReader::new(bytes.as_slice());
+            let init = Init::from_wire(&mut reader);
+            term::success!("{:?}", init);
             Ok(())
         }
     }

@@ -9,5 +9,8 @@ async-std = "1.12.0"
 rio_rt = { git = "https://github.com/vincenzopalazzo/rio.git" }
 log = "0.4"
 env_logger = "0.9.1"
-frontend_csv = { path = "../frontend_csv/" }
 codegen = { path = "../codegen/"}
+frontend_csv = { path = "../frontend_csv/" }
+fundamentals = { git = "https://github.com/lnspec-tools/ln-fundamentals.git" }
+hex = "0.4.3"
+radicle-term = { git = "https://github.com/radicle-dev/heartwood.git" }

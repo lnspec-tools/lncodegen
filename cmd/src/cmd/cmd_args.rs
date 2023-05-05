@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 #[command(author, version, about, long_about = None)]
 pub(crate) struct Cli {
     #[arg(short, long)]
-    pub(crate) lang: String,
+    pub(crate) lang: Option<String>,
     #[command(subcommand)]
     pub(crate) command: Commands,
 }
@@ -15,10 +15,12 @@ pub(crate) struct Cli {
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     /// does testing things
-    Gen {
+    Generate {
         /// lists test values
         #[arg(short, long)]
         bolt: String,
         to: PathBuf,
     },
+    /// Decode a unsgned lightning message in hex fromat
+    Decode { from: String },
 }

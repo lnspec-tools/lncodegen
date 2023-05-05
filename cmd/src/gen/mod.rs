@@ -15,6 +15,14 @@ pub struct CodeGenError {
     cause: String,
 }
 
+impl CodeGenError {
+    pub fn new(cause: &str) -> Self {
+        CodeGenError {
+            cause: cause.to_owned(),
+        }
+    }
+}
+
 impl Display for CodeGenError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "codegen error: {}", self.cause)
