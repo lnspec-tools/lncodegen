@@ -1,46 +1,60 @@
-// code generated with the lncodegen, please not edit this file.
+// code generated with the lngen, please not edit this file.
 use std::io::{Read, Write};
 
-use lnspec_derive::{DecodeWire, EncodeWire};
+use fundamentals_derive::{DecodeWire, EncodeWire};
 
-use crate::types::{ChainHash, ChannelId, Point, Signature};
-use crate::core::{FromWire, ToWire, IOError};
+use crate::core::{FromWire, ToWire};
+use crate::prelude::*;
 
-#[derive(DecodeWire, EncodeWire)]
+
+#[derive(DecodeWire, EncodeWire, Debug)]
 pub struct Error {
-    #[type=17]
+    #[warn(dead_code)]
+    #[msg_type=17]
     ty: u16,
     channel_id: ChannelId,
     len: u16,
+    data: BitFlag,
 }
 
-#[derive(DecodeWire, EncodeWire)]
+#[derive(DecodeWire, EncodeWire, Debug)]
 pub struct Init {
-    #[type=16]
+    #[warn(dead_code)]
+    #[msg_type=16]
     ty: u16,
     gflen: u16,
+    globalfeatures: BitFlag,
     flen: u16,
+    features: BitFlag,
+    init_tlvs: Stream,
 }
 
-#[derive(DecodeWire, EncodeWire)]
+#[derive(DecodeWire, EncodeWire, Debug)]
 pub struct Ping {
-    #[type=18]
+    #[warn(dead_code)]
+    #[msg_type=18]
     ty: u16,
     num_pong_bytes: u16,
     byteslen: u16,
+    ignored: BitFlag,
 }
 
-#[derive(DecodeWire, EncodeWire)]
+#[derive(DecodeWire, EncodeWire, Debug)]
 pub struct Pong {
-    #[type=19]
+    #[warn(dead_code)]
+    #[msg_type=19]
     ty: u16,
     byteslen: u16,
+    ignored: BitFlag,
 }
 
-#[derive(DecodeWire, EncodeWire)]
+#[derive(DecodeWire, EncodeWire, Debug)]
 pub struct Warning {
-    #[type=1]
+    #[warn(dead_code)]
+    #[msg_type=1]
     ty: u16,
     channel_id: ChannelId,
     len: u16,
+    data: BitFlag,
 }
+

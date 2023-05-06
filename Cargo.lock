@@ -272,22 +272,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a2dd5a6fe8c6e3502f568a6353e5273bbb15193ad9a89e457b9970798efbea1"
 
 [[package]]
-name = "cmd"
-version = "0.1.0"
-dependencies = [
- "async-std",
- "clap",
- "codegen",
- "env_logger",
- "frontend_csv",
- "fundamentals",
- "hex",
- "log",
- "radicle-term",
- "rio_rt",
-]
-
-[[package]]
 name = "codegen"
 version = "0.1.0"
 dependencies = [
@@ -413,7 +397,6 @@ dependencies = [
 [[package]]
 name = "fundamentals"
 version = "0.1.0"
-source = "git+https://github.com/lnspec-tools/ln-fundamentals.git#b18fd95ae3acdca02d72f1cd3e453927076578ae"
 dependencies = [
  "fundamentals-derive",
 ]
@@ -421,7 +404,6 @@ dependencies = [
 [[package]]
 name = "fundamentals-derive"
 version = "0.1.0"
-source = "git+https://github.com/lnspec-tools/ln-fundamentals.git#b18fd95ae3acdca02d72f1cd3e453927076578ae"
 dependencies = [
  "kproc-parser",
 ]
@@ -605,6 +587,22 @@ name = "linux-raw-sys"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ece97ea872ece730aed82664c424eb4c8291e1ff2480247ccf7409044bc6479f"
+
+[[package]]
+name = "lncodegen"
+version = "0.1.0"
+dependencies = [
+ "async-std",
+ "clap",
+ "codegen",
+ "env_logger",
+ "frontend_csv",
+ "fundamentals",
+ "hex",
+ "log",
+ "radicle-term",
+ "rio_rt",
+]
 
 [[package]]
 name = "log"

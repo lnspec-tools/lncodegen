@@ -4,7 +4,7 @@
 use std::fmt::Display;
 
 use clap::Parser;
-use log::{debug, error};
+use log::debug;
 use radicle_term as term;
 use rio_rt::runitime as rio;
 
@@ -77,10 +77,11 @@ async fn dispach_cmd(args: &Cli) -> Result<(), DispachError> {
             use fundamentals::bolt::bolt1::Init;
             use fundamentals::core::FromWire;
             use std::io::BufReader;
+
             let bytes = hex::decode(from).expect("error while decoding hex to bytes");
             let mut reader = BufReader::new(bytes.as_slice());
-            let init = Init::from_wire(&mut reader);
-            term::success!("{:?}", init);
+            let init = Init::from_wire(&mut reader)?;
+            term::success!("Done\n{:#?}", init);
             Ok(())
         }
     }
@@ -92,8 +93,7 @@ fn main() {
     let args = Cli::parse();
     rio::block_on(async move {
         if let Err(err) = dispach_cmd(&args).await {
-            error!("runtime error: {err}");
-            panic!("runtime error: {err}");
+            term::error(format!("runtime error: {err}"));
         }
     });
     rio::wait();

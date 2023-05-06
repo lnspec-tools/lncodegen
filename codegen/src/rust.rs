@@ -169,11 +169,19 @@ impl<'g> CodeGen<'g> for RustCodeGen {
 
     fn write_signature(&mut self, _: &LNMsData) {}
 
-    fn build_tlv_stream(&mut self, _field: &LNTlvRecord) {}
+    fn build_tlv_stream(&mut self, field: &LNTlvRecord) {
+        let code = fmt_struct_filed!(field.stream_name, "Stream");
+        self.file_content += &self.add_identation_to_code(&code);
+    }
 
     fn write_tlv_stream(&mut self, _: &LNTlvRecord) {}
 
-    fn build_bitfield(&mut self, _filed: &LNMsData) {}
+    fn build_bitfield(&mut self, field: &LNMsData) {
+        if let LNMsData::BitfieldStream(name, _) = field {
+            let code = fmt_struct_filed!(name, "BitFlag");
+            self.file_content += &self.add_identation_to_code(&code);
+        }
+    }
 
     fn write_bitfiled(&mut self, _: &LNMsData) {}
 }

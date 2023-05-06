@@ -1,5 +1,5 @@
 [package]
-name = "cmd"
+name = "lncodegen"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,6 +11,6 @@ log = "0.4"
 env_logger = "0.9.1"
 codegen = { path = "../codegen/"}
 frontend_csv = { path = "../frontend_csv/" }
-fundamentals = { git = "https://github.com/lnspec-tools/ln-fundamentals.git" }
+fundamentals = { path = "https://github.com/lnspec-tools/ln-fundamentals.git" }
 hex = "0.4.3"
 radicle-term = { git = "https://github.com/radicle-dev/heartwood.git" }
