@@ -397,6 +397,7 @@ dependencies = [
 [[package]]
 name = "fundamentals"
 version = "0.1.0"
+source = "git+https://github.com/lnspec-tools/ln-fundamentals.git#12ebc7de6f2cc6a85a73278c92f6fb353044708b"
 dependencies = [
  "fundamentals-derive",
 ]
@@ -404,6 +405,7 @@ dependencies = [
 [[package]]
 name = "fundamentals-derive"
 version = "0.1.0"
+source = "git+https://github.com/lnspec-tools/ln-fundamentals.git#12ebc7de6f2cc6a85a73278c92f6fb353044708b"
 dependencies = [
  "kproc-parser",
 ]

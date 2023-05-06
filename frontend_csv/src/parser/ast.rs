@@ -105,6 +105,15 @@ impl LNMsg {
     pub fn add_msg_data(&mut self, data: &LNMsData) {
         self.msg_data.push(data.clone());
     }
+
+    pub fn peek(&self) -> Option<&LNMsData> {
+        self.msg_data.last()
+    }
+
+    pub fn replace_last_with(&mut self, data: LNMsData) {
+        let len = self.msg_data.len() - 1;
+        self.msg_data[len] = data;
+    }
 }
 
 #[derive(Clone, PartialEq, Debug)]

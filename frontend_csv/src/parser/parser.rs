@@ -162,6 +162,15 @@ impl Parser {
             CSVTokenType::LiteralString => LNMsData::TLVinit(token.val.to_string(), msg_data_name),
             _ => panic!("Unknown Token {:?}", token),
         };
+        /* HACK: the bitfiled struct usually is able to length, so at this point
+         * we should trip the last element and put jut the bit field */
+        if let Some(LNMsData::Uint16(_)) = target_msg.peek() {
+            if let LNMsData::BitfieldStream(_, _) = msg_data {
+                trace!("replace the last msg data (u16) with the bitfiled");
+                target_msg.replace_last_with(msg_data);
+                return;
+            }
+        }
         trace!("Append msg data {:?} to msg {:?}", msg_data, target_msg);
         target_msg.add_msg_data(&msg_data);
     }

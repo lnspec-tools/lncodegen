@@ -13,7 +13,6 @@ pub struct Error {
     #[msg_type=17]
     ty: u16,
     channel_id: ChannelId,
-    len: u16,
     data: BitFlag,
 }
 
@@ -22,9 +21,7 @@ pub struct Init {
     #[warn(dead_code)]
     #[msg_type=16]
     ty: u16,
-    gflen: u16,
     globalfeatures: BitFlag,
-    flen: u16,
     features: BitFlag,
     init_tlvs: Stream,
 }
@@ -34,8 +31,6 @@ pub struct Ping {
     #[warn(dead_code)]
     #[msg_type=18]
     ty: u16,
-    num_pong_bytes: u16,
-    byteslen: u16,
     ignored: BitFlag,
 }
 
@@ -44,7 +39,6 @@ pub struct Pong {
     #[warn(dead_code)]
     #[msg_type=19]
     ty: u16,
-    byteslen: u16,
     ignored: BitFlag,
 }
 
@@ -54,7 +48,6 @@ pub struct Warning {
     #[msg_type=1]
     ty: u16,
     channel_id: ChannelId,
-    len: u16,
     data: BitFlag,
 }
 
