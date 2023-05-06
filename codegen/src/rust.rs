@@ -14,13 +14,13 @@ pub struct RustCodeGen {
 
 macro_rules! fmt_struct_filed {
     ($name:expr, $ty:expr) => {
-        format!("{}: {},\n", $name.as_str(), $ty)
+        format!("pub {}: {},\n", $name.as_str(), $ty)
     };
 }
 
 macro_rules! fmt_struct_filed_with_attr {
     ($name: expr, $ty: expr, $attr: expr) => {
-        format!("#[{}]\n{}: {},\n", $attr, $name.as_str(), $ty)
+        format!("#[{}]\npub {}: {},\n", $attr, $name.as_str(), $ty)
     };
 }
 
