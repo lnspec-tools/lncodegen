@@ -75,7 +75,7 @@ mod test {
         // check bytes line
         match parser.symbol_table.get("init").unwrap() {
             LNMsgType::Msg(msg) => assert_eq!(
-                msg.to_owned().msg_data[1],
+                msg.to_owned().msg_data[0],
                 ast::LNMsData::BitfieldStream("globalfeatures".to_string(), "gflen".to_string())
             ),
             _ => panic!("wrong value in the symbol table"),

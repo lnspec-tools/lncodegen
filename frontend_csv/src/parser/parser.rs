@@ -159,7 +159,28 @@ impl Parser {
                 LNMsData::BitfieldStream(tok.val.to_owned(), size)
             }
             // FIXME: this is a start point for a tlv stream
-            CSVTokenType::LiteralString => LNMsData::TLVinit(token.val.to_string(), msg_data_name),
+            CSVTokenType::LiteralString => {
+                // be compatible with cln csv
+                //
+                //  The difference is that cln use some alias type
+                //
+                // search for u64 alias
+                if ["amount_sat"].contains(&token.val.to_string().as_str()) {
+                    let tok = self.lookup_last(tokens).unwrap();
+                    LNMsData::Uint16(tok.val.to_owned())
+                } else if ["u8"].contains(&token.val.as_str()) {
+                    let tok = self.lookup_last(tokens).unwrap();
+                    let size = if !self.peek_and_check_if_type_declaration(tokens) {
+                        self.advance(tokens).val.to_owned()
+                    } else {
+                        "1".to_string()
+                    };
+                    trace!("bytes name {:?}\n", tok);
+                    LNMsData::BitfieldStream(tok.val.to_owned(), size)
+                } else {
+                    LNMsData::TLVinit(token.val.to_string(), msg_data_name)
+                }
+            }
             _ => panic!("Unknown Token {:?}", token),
         };
         /* HACK: the bitfiled struct usually is able to length, so at this point
@@ -236,7 +257,7 @@ impl Parser {
         while let CSVTokenType::MsgData = self.peek(tokens).ty {
             self.parse_msg_data(&mut msg_typ, tokens);
         }
-        trace!("Insert message in the symbol table: {:?}", msg_typ);
+        trace!("Insert message in the symbol table: {:#?}", msg_typ);
         self.symbol_table_add_lnmsg(&msg_typ);
     }
 
@@ -275,13 +296,13 @@ impl Parser {
                 CSVTokenType::SubTy => self.parse_subtype(tokens),
                 CSVTokenType::TlvType => self.parse_tlv(tokens),
                 _ => {
-                    trace!("parser status {:?}", self.symbol_table);
-                    trace!("loop up token {:?}", self.lookup_last(tokens));
+                    trace!("parser status {:#?}", self.symbol_table);
+                    trace!("look up token {:?}", self.lookup_last(tokens));
                     trace!("previous token {:?}", tokens.get(self.pos - 1).unwrap());
                     panic!("Unknown Token {:?}", self.peek(tokens))
                 }
             }
         }
-        trace!("Terminating with Parser: {:?}", self.symbol_table);
+        trace!("Terminating with Parser: {:#?}", self.symbol_table);
     }
 }

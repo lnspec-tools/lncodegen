@@ -1,6 +1,6 @@
 use super::token::CSVToken;
 use super::token::CSVTokenType;
-use log::{debug, trace};
+use log::trace;
 use std::collections::HashMap;
 
 pub struct Scanner {
