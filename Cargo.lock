@@ -396,16 +396,18 @@ dependencies = [
 
 [[package]]
 name = "fundamentals"
-version = "0.1.0"
-source = "git+https://github.com/lnspec-tools/ln-fundamentals.git#12ebc7de6f2cc6a85a73278c92f6fb353044708b"
+version = "0.0.1-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19361ecf0beb94e9fd9227861201acf896fe3a8619a489065262f56ee1863651"
 dependencies = [
  "fundamentals-derive",
 ]
 
 [[package]]
 name = "fundamentals-derive"
-version = "0.1.0"
-source = "git+https://github.com/lnspec-tools/ln-fundamentals.git#12ebc7de6f2cc6a85a73278c92f6fb353044708b"
+version = "0.0.1-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6643970235b9b198551b8f505d2dcba2d288a4a4f17c0e5207aa84180f622266"
 dependencies = [
  "kproc-parser",
 ]
@@ -557,8 +559,9 @@ dependencies = [
 
 [[package]]
 name = "kproc-parser"
-version = "0.0.1-beta.4"
-source = "git+https://github.com/vincenzopalazzo/kproc-macros.git?branch=macros/fmt_empty_generics#8c442aa1e272b77e668f858dfc58037d9732a913"
+version = "0.0.1-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76e68f75f03a8c3dc1e7e771eb115b76078011bee8eda0c945cc88bf0f903146"
 dependencies = [
  "proc-macro2",
 ]

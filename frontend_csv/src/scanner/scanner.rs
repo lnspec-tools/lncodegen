@@ -1,6 +1,6 @@
 use super::token::CSVToken;
 use super::token::CSVTokenType;
-use log::trace;
+use log::{debug, trace};
 use std::collections::HashMap;
 
 pub struct Scanner {
@@ -199,7 +199,8 @@ impl Scanner {
         let mut tokenize: Vec<CSVToken> = Vec::new();
         let mut current_buffer: String = String::new();
         let size = symbols.len();
-        for pos in 0..size {
+        let mut pos = 0;
+        while pos < size {
             // Before go on, check if the current buffer is a keyword
             // if yes add the keyword value in the token list.
             if self.keywords.contains_key(current_buffer.as_str()) {
@@ -207,11 +208,13 @@ impl Scanner {
                 // to make sure that we are parsing the correct keyword
                 if symbols.get(pos).is_some_and(|sym| sym.is_alphabetic()) {
                     current_buffer.push(symbols[pos]);
+                    pos += 1;
                     continue;
                 }
                 let keyword = self.keywords.get(current_buffer.as_str()).unwrap();
                 tokenize.push(keyword.to_owned());
                 current_buffer.clear();
+                pos += 1;
                 continue;
             }
 
@@ -229,8 +232,23 @@ impl Scanner {
                     self.add_token(&mut tokenize, &mut current_buffer)
                 }
                 '\n' => {
+                    if current_buffer.is_empty() {
+                        pos += 1;
+                        continue;
+                    }
                     self.add_token(&mut tokenize, &mut current_buffer);
                     self.line += 1;
+                }
+                '#' => {
+                    let mut comment = String::new();
+                    // skips comments
+                    while pos < symbols.len() && symbols[pos] != '\n' {
+                        // we increase the idx of the for loop.
+                        pos += 1;
+                        comment += symbols[pos].to_string().as_str();
+                    }
+                    self.line += 1;
+                    current_buffer.clear();
                 }
                 '\t' | ' ' => {
                     // FIXME: we need to skip this characters?
@@ -243,11 +261,13 @@ impl Scanner {
                     current_buffer.push(symbols[pos]);
                 }
             }
+            pos += 1;
         }
         tokenize.push(CSVToken {
             ty: CSVTokenType::EOF,
             val: "EOF".to_string(),
         });
+        trace!("tokens list: {:?}", tokenize);
         tokenize
     }
 }

@@ -106,8 +106,8 @@ mod test {
             },
         ];
         for c in 0..expected.len() - 1 {
-            debug_assert_eq!(result[c + 3].val, expected[c].val);
-            debug_assert_eq!(result[c + 3].ty, expected[c].ty);
+            assert_eq!(result[c + 3].val, expected[c].val);
+            assert_eq!(result[c + 3].ty, expected[c].ty);
         }
     }
 
@@ -193,5 +193,48 @@ mod test {
         let mut scanner = scanner::Scanner::new();
         let tokens = scanner.scan(&char_vec);
         assert_eq!(tokens.len(), 7);
+    }
+
+    // Test if scanner read middle line correctly
+    #[test]
+    fn test_skip_comments() {
+        let contents = "# this is a comment\nmsgtype,init,16\nmsgdata,init,gflen,u16,\n
+        msgdata,init,globalfeatures,byte,gflen\n";
+        let char_vec: Vec<char> = contents.chars().collect();
+        let mut scanner = scanner::Scanner::new();
+        let result = scanner.scan(&char_vec);
+        assert!(!result.is_empty());
+        let expected = vec![
+            token::CSVToken {
+                ty: token::CSVTokenType::MsgData,
+                val: "msgdata".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::LiteralString,
+                val: "init".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::LiteralString,
+                val: "gflen".to_string(),
+            },
+            token::CSVToken {
+                ty: token::CSVTokenType::U16,
+                val: "u16".to_string(),
+            },
+        ];
+        for c in 0..expected.len() - 1 {
+            assert_eq!(
+                result[c + 3].val,
+                expected[c].val,
+                "mismatch at pos {c}, {:?}",
+                result[c + 3]
+            );
+            assert_eq!(
+                result[c + 3].ty,
+                expected[c].ty,
+                "mismatch at pos {c}, {:?}",
+                result[c + 3]
+            );
+        }
     }
 }
