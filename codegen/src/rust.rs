@@ -73,7 +73,7 @@ impl<'g> CodeGen<'g> for RustCodeGen {
     }
 
     fn build_msg(&mut self, msg: &LNMsg) {
-        let mut code = String::from("#[derive(DecodeWire, EncodeWire, Debug)]\n");
+        let mut code = String::from("#[derive(DecodeWire, EncodeWire, Debug, Clone)]\n");
         code += &format!("pub struct {} ", msg.msg_name.to_case(Case::Pascal));
         self.file_content += &code;
         self.open_scope();
