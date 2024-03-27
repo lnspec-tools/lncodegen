@@ -9,7 +9,6 @@ use crate::prelude::*;
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct AcceptChannel {
-    #[warn(dead_code)]
     #[msg_type=33]
     pub ty: u16,
     pub temporary_channel_id: BitFlag,
@@ -31,7 +30,6 @@ pub struct AcceptChannel {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct AcceptChannel2 {
-    #[warn(dead_code)]
     #[msg_type=65]
     pub ty: u16,
     pub temporary_channel_id: ChannelId,
@@ -54,7 +52,6 @@ pub struct AcceptChannel2 {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct ChannelReady {
-    #[warn(dead_code)]
     #[msg_type=36]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -64,7 +61,6 @@ pub struct ChannelReady {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct ChannelReestablish {
-    #[warn(dead_code)]
     #[msg_type=136]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -76,7 +72,6 @@ pub struct ChannelReestablish {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct ClosingSigned {
-    #[warn(dead_code)]
     #[msg_type=39]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -87,7 +82,6 @@ pub struct ClosingSigned {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct CommitmentSigned {
-    #[warn(dead_code)]
     #[msg_type=132]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -97,7 +91,6 @@ pub struct CommitmentSigned {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct FundingCreated {
-    #[warn(dead_code)]
     #[msg_type=34]
     pub ty: u16,
     pub temporary_channel_id: BitFlag,
@@ -108,7 +101,6 @@ pub struct FundingCreated {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct FundingSigned {
-    #[warn(dead_code)]
     #[msg_type=35]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -117,7 +109,6 @@ pub struct FundingSigned {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct OpenChannel {
-    #[warn(dead_code)]
     #[msg_type=32]
     pub ty: u16,
     pub chain_hash: ChainHash,
@@ -143,7 +134,6 @@ pub struct OpenChannel {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct OpenChannel2 {
-    #[warn(dead_code)]
     #[msg_type=64]
     pub ty: u16,
     pub chain_hash: ChainHash,
@@ -170,7 +160,6 @@ pub struct OpenChannel2 {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct RevokeAndAck {
-    #[warn(dead_code)]
     #[msg_type=133]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -180,7 +169,6 @@ pub struct RevokeAndAck {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct Shutdown {
-    #[warn(dead_code)]
     #[msg_type=38]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -189,7 +177,6 @@ pub struct Shutdown {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxAbort {
-    #[warn(dead_code)]
     #[msg_type=74]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -198,7 +185,6 @@ pub struct TxAbort {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxAckRbf {
-    #[warn(dead_code)]
     #[msg_type=73]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -207,7 +193,6 @@ pub struct TxAckRbf {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxAddInput {
-    #[warn(dead_code)]
     #[msg_type=66]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -219,7 +204,6 @@ pub struct TxAddInput {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxAddOutput {
-    #[warn(dead_code)]
     #[msg_type=67]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -230,7 +214,6 @@ pub struct TxAddOutput {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxComplete {
-    #[warn(dead_code)]
     #[msg_type=70]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -238,7 +221,6 @@ pub struct TxComplete {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxInitRbf {
-    #[warn(dead_code)]
     #[msg_type=72]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -249,7 +231,6 @@ pub struct TxInitRbf {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxRemoveInput {
-    #[warn(dead_code)]
     #[msg_type=68]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -258,7 +239,6 @@ pub struct TxRemoveInput {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxRemoveOutput {
-    #[warn(dead_code)]
     #[msg_type=69]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -267,7 +247,6 @@ pub struct TxRemoveOutput {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct TxSignatures {
-    #[warn(dead_code)]
     #[msg_type=71]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -277,7 +256,6 @@ pub struct TxSignatures {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct UpdateAddHtlc {
-    #[warn(dead_code)]
     #[msg_type=128]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -290,7 +268,6 @@ pub struct UpdateAddHtlc {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct UpdateFailHtlc {
-    #[warn(dead_code)]
     #[msg_type=131]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -300,7 +277,6 @@ pub struct UpdateFailHtlc {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct UpdateFailMalformedHtlc {
-    #[warn(dead_code)]
     #[msg_type=135]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -311,7 +287,6 @@ pub struct UpdateFailMalformedHtlc {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct UpdateFee {
-    #[warn(dead_code)]
     #[msg_type=134]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -320,7 +295,6 @@ pub struct UpdateFee {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct UpdateFulfillHtlc {
-    #[warn(dead_code)]
     #[msg_type=130]
     pub ty: u16,
     pub channel_id: ChannelId,
