@@ -81,7 +81,6 @@ impl<'g> CodeGen<'g> for RustCodeGen {
         code += &format!("pub struct {} ", msg.msg_name.to_case(Case::Pascal));
         self.file_content += &code;
         self.open_scope();
-        self.file_content += &self.add_identation_to_code("#[warn(dead_code)]");
         let attr = format!("msg_type={}", msg.msg_typ);
         let code = fmt_struct_filed_with_attr!("ty".to_owned(), "u16", attr);
         self.file_content += self.add_identation_to_code(&code).as_str();
