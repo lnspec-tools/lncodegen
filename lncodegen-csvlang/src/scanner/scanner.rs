@@ -4,7 +4,6 @@ use log::trace;
 use std::collections::HashMap;
 
 pub struct Scanner {
-    line: u64,
     keywords: HashMap<String, CSVToken>,
 }
 
@@ -173,95 +172,47 @@ impl Scanner {
                 },
             ),
         ]);
-        Scanner { line: 1, keywords }
+        Scanner { keywords }
     }
 
-    pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &mut String) {
+    pub fn add_token(&mut self, tokenize: &mut Vec<CSVToken>, buffer: &str) {
         // sanity check if the buffer is empty we can not perform any operation.
         // FIXME: condition like the following on `init, ,16` are not valid?
         if !buffer.is_empty() {
             if buffer.trim().parse::<f64>().is_ok() {
                 tokenize.push(CSVToken {
                     ty: CSVTokenType::Number,
-                    val: buffer.clone(),
+                    val: buffer.to_owned(),
                 });
             } else {
                 tokenize.push(CSVToken {
                     ty: CSVTokenType::LiteralString,
-                    val: buffer.clone(),
+                    val: buffer.to_owned(),
                 });
             }
-            buffer.clear();
         }
     }
 
-    pub fn scan(&mut self, symbols: &Vec<char>) -> Vec<CSVToken> {
+    pub fn scan(&mut self, content: &str) -> Vec<CSVToken> {
+        // We can split the content by new line terminator
+        let lines = content.split_terminator('\n');
         let mut tokenize: Vec<CSVToken> = Vec::new();
-        let mut current_buffer: String = String::new();
-        let size = symbols.len();
-        let mut pos = 0;
-        while pos < size {
-            // Before go on, check if the current buffer is a keyword
-            // if yes add the keyword value in the token list.
-            if self.keywords.contains_key(current_buffer.as_str()) {
-                // The csv grammar contains an ambiguity, so we make this monkey check
-                // to make sure that we are parsing the correct keyword
-                if symbols.get(pos).is_some_and(|sym| sym.is_alphabetic()) {
-                    current_buffer.push(symbols[pos]);
-                    pos += 1;
-                    continue;
-                }
-                let keyword = self.keywords.get(current_buffer.as_str()).unwrap();
-                tokenize.push(keyword.to_owned());
-                current_buffer.clear();
-                pos += 1;
+        for line in lines {
+            log::debug!("looking at the line: {line}");
+            if line.trim().starts_with('#') {
+                // it is a comment
                 continue;
             }
-
-            // if the current buffer is not a keyword, we check if we are found
-            // a comma or an end-line token, and if nothing of the previous condition is satisfied
-            // we keep putting the token in the current buffer.
-            match symbols[pos] {
-                ',' => {
-                    // Here we panic if we found a comma but the current buffer is empty.
-                    // to handle situation like double commas in sequence.
-                    if current_buffer.is_empty() {
-                        trace!("current symbol: {}", symbols[pos]);
-                        panic!("Empty space between two separator `,` are not allowed")
-                    };
-                    self.add_token(&mut tokenize, &mut current_buffer)
-                }
-                '\n' => {
-                    if current_buffer.is_empty() {
-                        pos += 1;
-                        continue;
-                    }
-                    self.add_token(&mut tokenize, &mut current_buffer);
-                    self.line += 1;
-                }
-                '#' => {
-                    let mut comment = String::new();
-                    // skips comments
-                    while pos < symbols.len() && symbols[pos] != '\n' {
-                        // we increase the idx of the for loop.
-                        pos += 1;
-                        comment += symbols[pos].to_string().as_str();
-                    }
-                    self.line += 1;
-                    current_buffer.clear();
-                }
-                '\t' | ' ' => {
-                    // FIXME: we need to skip this characters?
-                }
-                _ => {
-                    if pos == size - 1 {
-                        // Panic due to No end-line character found at last position.
-                        panic!("Need EOF symbol")
-                    };
-                    current_buffer.push(symbols[pos]);
+            // Splitting the line in tokens by `,`
+            let tokens = line.split(',');
+            for token in tokens {
+                let token = token.trim();
+                if let Some(keyword) = self.keywords.get(token) {
+                    tokenize.push(keyword.to_owned());
+                } else {
+                    self.add_token(&mut tokenize, token);
                 }
             }
-            pos += 1;
         }
         tokenize.push(CSVToken {
             ty: CSVTokenType::EOF,

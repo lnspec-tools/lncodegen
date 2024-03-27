@@ -27,9 +27,8 @@ mod test {
     fn parse_simple_recursive_line() {
         init();
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result: Vec<CSVToken> = scanner.scan(&char_vec);
+        let result: Vec<CSVToken> = scanner.scan(contents);
         let mut parser = parser::Parser::new();
         parser.parse(&result);
         if let LNMsgType::Msg(msg) = parser.symbol_table.get("init").unwrap() {
@@ -45,9 +44,8 @@ mod test {
         init();
         let contents = "msgtype,init,16 \
                         msgdata,init,gflen,u16";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result: Vec<CSVToken> = scanner.scan(&char_vec);
+        let result: Vec<CSVToken> = scanner.scan(contents);
         let mut parser = parser::Parser::new();
         parser.parse(&result);
     }
@@ -67,9 +65,8 @@ mod test {
         tlvtype,init_tlvs,remote_addr,3\n
         tlvdata,init_tlvs,remote_addr,data,byte,...\n";
 
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result: Vec<CSVToken> = scanner.scan(&char_vec);
+        let result: Vec<CSVToken> = scanner.scan(contents);
         let mut parser = parser::Parser::new();
         parser.parse(&result);
         // check bytes line
@@ -90,9 +87,8 @@ mod test {
         let path_file = std::env::var_os("CSV_PATH").unwrap();
         let contents = fs::read_to_string(format!("{}/bolt7.csv", path_file.to_str().unwrap()))
             .expect("Something went wrong reading the file");
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result = scanner.scan(&char_vec);
+        let result = scanner.scan(&contents);
         let mut parser = parser::Parser::new();
         parser.parse(&result);
 

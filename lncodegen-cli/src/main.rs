@@ -48,6 +48,9 @@ fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let args = Cli::parse();
-    dispach_cmd(&args)?;
+    match dispach_cmd(&args) {
+        Ok(_) => {}
+        Err(err) => term::error(format!("{err}")),
+    }
     Ok(())
 }

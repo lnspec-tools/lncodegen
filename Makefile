@@ -30,4 +30,4 @@ clean:
 	@rm -rf specs/*.csv specs/bolts
 
 install:
-	$(CC) install --locked --path ./cmd
+	$(CC) install --locked --path ./lncodegen-cli --debug

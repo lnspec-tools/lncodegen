@@ -148,6 +148,10 @@ impl Parser {
                 let msg_val = self.lookup_last(tokens).unwrap();
                 LNMsData::Point(msg_val.val.to_owned())
             }
+            CSVTokenType::Sha256 => {
+                let msg_val = self.lookup_last(tokens).unwrap();
+                LNMsData::Sha256(msg_val.val.to_owned())
+            }
             CSVTokenType::Byte => {
                 let tok = self.lookup_last(tokens).unwrap();
                 let size = if !self.peek_and_check_if_type_declaration(tokens) {
@@ -168,7 +172,9 @@ impl Parser {
                 if ["amount_sat"].contains(&token.val.to_string().as_str()) {
                     let tok = self.lookup_last(tokens).unwrap();
                     LNMsData::Uint16(tok.val.to_owned())
-                } else if ["u8"].contains(&token.val.as_str()) {
+                // FIXME: an array of any type, so we should be able to fix
+                // this in some way and automatically fill thsi.
+                } else if ["u8", "witness"].contains(&token.val.as_str()) {
                     let tok = self.lookup_last(tokens).unwrap();
                     let size = if !self.peek_and_check_if_type_declaration(tokens) {
                         self.advance(tokens).val.to_owned()

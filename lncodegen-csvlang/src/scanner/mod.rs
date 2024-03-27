@@ -15,9 +15,8 @@ mod test {
         let path_file = std::env::var_os("CSV_PATH").unwrap();
         let contents = fs::read_to_string(format!("{}/bolt1.csv", path_file.to_str().unwrap()))
             .expect("Something went wrong reading the file");
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result = scanner.scan(&char_vec);
+        let result = scanner.scan(&contents);
         assert!(!result.is_empty());
         for c in result {
             match c.ty {
@@ -54,9 +53,8 @@ mod test {
     #[test]
     fn test_one_line() {
         let contents = "msgtype,init,16\n";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result = scanner.scan(&char_vec);
+        let result = scanner.scan(contents);
         assert!(!result.is_empty());
         let expected = vec![
             token::CSVToken {
@@ -83,9 +81,8 @@ mod test {
     fn test_middle_line() {
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen\n";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result = scanner.scan(&char_vec);
+        let result = scanner.scan(contents);
         assert!(!result.is_empty());
         let expected = vec![
             token::CSVToken {
@@ -116,9 +113,8 @@ mod test {
     fn test_last_line() {
         let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen\n";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let mut result = scanner.scan(&char_vec);
+        let mut result = scanner.scan(contents);
         result.reverse();
         assert!(!result.is_empty());
         let expected = vec![
@@ -153,45 +149,12 @@ mod test {
         }
     }
 
-    // Test for double commas in seqence between 2 tokens
-    #[test]
-    #[should_panic(expected = "Empty space between two separator `,` are not allowed")]
-    fn test_empty_middle() {
-        let contents = "msgtype,  ,16\n";
-        let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new();
-        scanner.scan(&char_vec);
-    }
-
-    // Test for double commas in seqence in front of first token
-    #[test]
-    #[should_panic(expected = "Empty space between two separator `,` are not allowed")]
-    fn test_empty_front() {
-        let contents = ",,16\n";
-        let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new();
-        scanner.scan(&char_vec);
-    }
-
-    // Test if the content has a end of line character at the end
-    // which include \n and commas
-    #[test]
-    #[should_panic(expected = "Need EOF symbol")]
-    fn test_empty_eof() {
-        let contents = "msgtype,init,16\nmsgdata,init,gflen,u16,\n
-        msgdata,init,globalfeatures,byte,gflen";
-        let char_vec: Vec<char> = contents.chars().collect();
-        let mut scanner = scanner::Scanner::new();
-        scanner.scan(&char_vec);
-    }
-
     #[test]
     fn test_subtype_parsing() {
         let contents = "subtype,init, \
                         subtypedata,init,gflen,u16\n";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let tokens = scanner.scan(&char_vec);
+        let tokens = scanner.scan(contents);
         assert_eq!(tokens.len(), 7);
     }
 
@@ -200,9 +163,8 @@ mod test {
     fn test_skip_comments() {
         let contents = "# this is a comment\nmsgtype,init,16\nmsgdata,init,gflen,u16,\n
         msgdata,init,globalfeatures,byte,gflen\n";
-        let char_vec: Vec<char> = contents.chars().collect();
         let mut scanner = scanner::Scanner::new();
-        let result = scanner.scan(&char_vec);
+        let result = scanner.scan(contents);
         assert!(!result.is_empty());
         let expected = vec![
             token::CSVToken {
