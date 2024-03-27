@@ -9,7 +9,6 @@ use crate::prelude::*;
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct Error {
-    #[warn(dead_code)]
     #[msg_type=17]
     pub ty: u16,
     pub channel_id: ChannelId,
@@ -18,7 +17,6 @@ pub struct Error {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct Init {
-    #[warn(dead_code)]
     #[msg_type=16]
     pub ty: u16,
     pub globalfeatures: BitFlag,
@@ -28,7 +26,6 @@ pub struct Init {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct Ping {
-    #[warn(dead_code)]
     #[msg_type=18]
     pub ty: u16,
     pub num_pong_bytes: u16,
@@ -37,7 +34,6 @@ pub struct Ping {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct Pong {
-    #[warn(dead_code)]
     #[msg_type=19]
     pub ty: u16,
     pub ignored: BitFlag,
@@ -45,7 +41,6 @@ pub struct Pong {
 
 #[derive(DecodeWire, EncodeWire, Debug, Clone)]
 pub struct Warning {
-    #[warn(dead_code)]
     #[msg_type=1]
     pub ty: u16,
     pub channel_id: ChannelId,
