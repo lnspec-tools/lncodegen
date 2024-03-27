@@ -32,6 +32,7 @@ pub enum LNMsData {
     Signature(String),
     ShortChannelId(String),
     Point(String),
+    Sha256(String),
     /// The array can be bounded or we can read till the EOF
     BitfieldStream(String, String),
     TLVinit(String, String),

@@ -14,8 +14,7 @@ impl CodeGenMethod for CSVCodeGen {
     fn generate(&self, bolt_content: &str) -> anyhow::Result<String> {
         let mut scanner = Scanner::new();
         let mut parser = Parser::new();
-        let source = bolt_content.chars().collect();
-        let tokens = scanner.scan(&source);
+        let tokens = scanner.scan(bolt_content);
         parser.parse(&tokens);
 
         let symbol_table = parser.symbol_table;
