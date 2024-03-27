@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-frontend_csv = { path = "../frontend_csv/" }
+csvlang = { path = "../lncodegen-csvlang/" }
 indoc = "1.0.7"
 convert_case = "0.5.0"
 log = "0.4"
