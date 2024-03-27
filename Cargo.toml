@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "frontend_csv",
-    "codegen",
-    "cmd",
+    "lncodegen-csvlang",
+    "lncodegen-codegen",
+    "lncodegen-cli",
 ]
 
 resolver = "2"

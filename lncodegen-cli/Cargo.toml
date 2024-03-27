@@ -1,5 +1,5 @@
 [package]
-name = "lncodegen"
+name = "lncodegen-cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,8 +7,8 @@ edition = "2021"
 clap = { version = "4.0.12", features = [ "derive" ] }
 log = "0.4"
 env_logger = "0.9.1"
-codegen = { path = "../codegen/"}
-frontend_csv = { path = "../frontend_csv/" }
+codegen = { path = "../lncodegen-codegen/"}
+csvlang = { path = "../lncodegen-csvlang/" }
 fundamentals = { version = "0.0.1-alpha.1" }
 hex = "0.4.3"
 radicle-term = { git = "https://github.com/radicle-dev/heartwood.git" }

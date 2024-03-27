@@ -149,8 +149,8 @@ name = "codegen"
 version = "0.1.0"
 dependencies = [
  "convert_case",
+ "csvlang",
  "env_logger",
- "frontend_csv",
  "indoc",
  "log",
 ]
@@ -166,6 +166,14 @@ name = "convert_case"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb4a24b1aaf0fd0ce8b45161144d6f42cd91677fd5940fd431183eb023b3a2b8"
+
+[[package]]
+name = "csvlang"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+]
 
 [[package]]
 name = "dyn-clone"
@@ -209,14 +217,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
-]
-
-[[package]]
-name = "frontend_csv"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "log",
 ]
 
 [[package]]
@@ -382,14 +382,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "01cda141df6706de531b6c46c3a33ecca755538219bd484262fa09410c13539c"
 
 [[package]]
-name = "lncodegen"
+name = "lncodegen-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
  "codegen",
+ "csvlang",
  "env_logger",
- "frontend_csv",
  "fundamentals",
  "hex",
  "log",

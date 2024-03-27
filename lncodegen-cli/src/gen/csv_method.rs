@@ -1,9 +1,10 @@
 //! Implementing the Code generator base on the CSV file.
 use crate::gen::CodeGenMethod;
+
 use codegen::codegen::CodeGen;
 use codegen::rust::RustCodeGen;
-use frontend_csv::parser::parser::Parser;
-use frontend_csv::scanner::scanner::Scanner;
+use csvlang::parser::parser::Parser;
+use csvlang::scanner::scanner::Scanner;
 
 pub struct CSVCodeGen {
     pub lang: String,

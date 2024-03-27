@@ -1,8 +1,9 @@
 //! Code Generation module implementation
 use std::collections::BTreeMap;
 
-use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType, LNSubType, LNTlvRecord};
 use log::debug;
+
+use csvlang::parser::ast::{LNMsData, LNMsg, LNMsgType, LNSubType, LNTlvRecord};
 
 /// Code Gen trait that specify all the basic method to create a new
 /// code generation target to encode and decode a lightning network message.

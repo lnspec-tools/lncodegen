@@ -1,5 +1,5 @@
 [package]
-name = "frontend_csv"
+name = "csvlang"
 version = "0.1.0"
 edition = "2021"
 

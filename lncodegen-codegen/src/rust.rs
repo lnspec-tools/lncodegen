@@ -1,9 +1,13 @@
 //! Rust code generation for the lightning
 //! network specification.
-use super::codegen::CodeGen;
+use std::collections::BTreeMap;
+use std::fmt::Display;
+
 use convert_case::{Case, Casing};
-use frontend_csv::parser::ast::{LNMsData, LNMsg, LNMsgType, LNTlvRecord};
-use std::{collections::BTreeMap, fmt::Display};
+
+use csvlang::parser::ast::{LNMsData, LNMsg, LNMsgType, LNTlvRecord};
+
+use super::codegen::CodeGen;
 
 pub struct RustCodeGen {
     #[allow(dead_code)]
@@ -115,7 +119,7 @@ impl<'g> CodeGen<'g> for RustCodeGen {
 
     fn write_u32(&mut self, _: &LNMsData) {}
 
-    fn build_u64(&mut self, field: &frontend_csv::parser::ast::LNMsData) {
+    fn build_u64(&mut self, field: &csvlang::parser::ast::LNMsData) {
         if let LNMsData::Uint64(name) = field {
             let code = fmt_struct_filed!(name, "u64");
             self.file_content += self.add_identation_to_code(&code).as_str();
