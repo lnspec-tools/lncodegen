@@ -60,14 +60,17 @@ mod test {
             token::CSVToken {
                 ty: token::CSVTokenType::MsgTy,
                 val: "msgtype".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "init".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::Number,
                 val: "16".to_string(),
+                code_line: None,
             },
         ];
         for c in 0..expected.len() - 1 {
@@ -88,18 +91,22 @@ mod test {
             token::CSVToken {
                 ty: token::CSVTokenType::MsgData,
                 val: "msgdata".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "init".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "gflen".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::U16,
                 val: "u16".to_string(),
+                code_line: None,
             },
         ];
         for c in 0..expected.len() - 1 {
@@ -121,26 +128,32 @@ mod test {
             token::CSVToken {
                 ty: token::CSVTokenType::EOF,
                 val: "EOF".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "gflen".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::Byte,
                 val: "byte".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "globalfeatures".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "init".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::MsgData,
                 val: "msgdata".to_string(),
+                code_line: None,
             },
         ];
         for c in 0..expected.len() - 1 {
@@ -170,18 +183,22 @@ mod test {
             token::CSVToken {
                 ty: token::CSVTokenType::MsgData,
                 val: "msgdata".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "init".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::LiteralString,
                 val: "gflen".to_string(),
+                code_line: None,
             },
             token::CSVToken {
                 ty: token::CSVTokenType::U16,
                 val: "u16".to_string(),
+                code_line: None,
             },
         ];
         for c in 0..expected.len() - 1 {
