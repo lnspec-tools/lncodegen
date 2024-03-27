@@ -162,6 +162,15 @@ impl<'g> CodeGen<'g> for RustCodeGen {
         }
     }
 
+    fn build_sha256(&mut self, field: &LNMsData) {
+        if let LNMsData::Sha256(name) = field {
+            let code = fmt_struct_filed!(name, "Sha256");
+            self.file_content += self.add_identation_to_code(&code).as_str();
+        }
+    }
+
+    fn write_sha256(&mut self, _: &LNMsData) {}
+
     fn write_point(&mut self, _: &LNMsData) {}
 
     fn build_signature(&mut self, filed: &LNMsData) {

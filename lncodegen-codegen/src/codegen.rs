@@ -64,6 +64,10 @@ pub trait CodeGen<'g> {
 
     fn write_point(&mut self, field: &LNMsData);
 
+    fn build_sha256(&mut self, field: &LNMsData);
+
+    fn write_sha256(&mut self, field: &LNMsData);
+
     fn build_bitfield(&mut self, filed: &LNMsData);
 
     fn write_bitfiled(&mut self, field: &LNMsData);
@@ -84,6 +88,7 @@ pub trait CodeGen<'g> {
                 LNMsData::ShortChannelId(_) => self.build_short_channel_id(field),
                 LNMsData::Signature(_) => self.build_signature(field),
                 LNMsData::Point(_) => self.build_point(field),
+                LNMsData::Sha256(_) => self.build_sha256(field),
                 LNMsData::BitfieldStream(_, _) => self.build_bitfield(field),
                 LNMsData::TLVinit(tlv_name, _) => {
                     let tlv = symbol_table.get(tlv_name).unwrap();
@@ -110,6 +115,7 @@ pub trait CodeGen<'g> {
                 LNMsData::ShortChannelId(_) => self.write_short_channel_id(field),
                 LNMsData::Signature(_) => self.write_signature(field),
                 LNMsData::Point(_) => self.write_point(field),
+                LNMsData::Sha256(_) => self.write_sha256(field),
                 LNMsData::BitfieldStream(_, _) => self.write_bitfiled(field),
                 LNMsData::TLVinit(tlv_name, _) => {
                     let tlv = symbol_table.get(tlv_name).unwrap();

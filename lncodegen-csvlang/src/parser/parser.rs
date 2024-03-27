@@ -58,6 +58,10 @@ impl Parser {
         tokens.get(self.pos - 2)
     }
 
+    fn lookup_next<'p>(&self, tokens: &'p [CSVToken]) -> Option<&'p CSVToken> {
+        tokens.get(self.pos + 1)
+    }
+
     /// Parse a message type line of the csv file, where the format looks like
     /// the following one:
     ///
@@ -137,8 +141,12 @@ impl Parser {
                 LNMsData::ChannelId(msg_val.val.to_owned())
             }
             CSVTokenType::Signature => {
-                let msg_val = self.lookup_last(tokens).unwrap();
-                LNMsData::Signature(msg_val.val.to_owned())
+                if self.is_bitfield(tokens) {
+                    self.make_bitfield(tokens)
+                } else {
+                    let msg_val = self.lookup_last(tokens).unwrap();
+                    LNMsData::Signature(msg_val.val.to_owned())
+                }
             }
             CSVTokenType::ShortChannelId => {
                 let msg_val = self.lookup_last(tokens).unwrap();
@@ -152,18 +160,10 @@ impl Parser {
                 let msg_val = self.lookup_last(tokens).unwrap();
                 LNMsData::Sha256(msg_val.val.to_owned())
             }
-            CSVTokenType::Byte => {
-                let tok = self.lookup_last(tokens).unwrap();
-                let size = if !self.peek_and_check_if_type_declaration(tokens) {
-                    self.advance(tokens).val.to_owned()
-                } else {
-                    "1".to_string()
-                };
-                trace!("bytes name {:?}\n", tok);
-                LNMsData::BitfieldStream(tok.val.to_owned(), size)
-            }
+            CSVTokenType::Byte => self.make_bitfield(tokens),
             // FIXME: this is a start point for a tlv stream
             CSVTokenType::LiteralString => {
+                log::debug!("token ****** `{:?}`", token);
                 // be compatible with cln csv
                 //
                 //  The difference is that cln use some alias type
@@ -172,8 +172,6 @@ impl Parser {
                 if ["amount_sat"].contains(&token.val.to_string().as_str()) {
                     let tok = self.lookup_last(tokens).unwrap();
                     LNMsData::Uint16(tok.val.to_owned())
-                // FIXME: an array of any type, so we should be able to fix
-                // this in some way and automatically fill thsi.
                 } else if ["u8", "witness"].contains(&token.val.as_str()) {
                     let tok = self.lookup_last(tokens).unwrap();
                     let size = if !self.peek_and_check_if_type_declaration(tokens) {
@@ -198,6 +196,7 @@ impl Parser {
                 return;
             }
         }
+
         trace!("Append msg data {:?} to msg {:?}", msg_data, target_msg);
         target_msg.add_msg_data(&msg_data);
     }
@@ -295,6 +294,21 @@ impl Parser {
         typ.ty_data = fake_lnmessage.msg_data;
     }
 
+    fn make_bitfield(&mut self, tokens: &[CSVToken]) -> LNMsData {
+        let tok = self.lookup_last(tokens).unwrap();
+        let size = if !self.peek_and_check_if_type_declaration(tokens) {
+            self.advance(tokens).val.to_owned()
+        } else {
+            "1".to_string()
+        };
+        trace!("bytes name {:?}\n", tok);
+        LNMsData::BitfieldStream(tok.val.to_owned(), size)
+    }
+
+    fn is_bitfield(&mut self, tokens: &[CSVToken]) -> bool {
+        !self.peek_and_check_if_type_declaration(tokens)
+    }
+
     /// Entry point of the parser!
     pub fn parse(&mut self, tokens: &[CSVToken]) {
         while self.peek(tokens).ty != CSVTokenType::EOF {
@@ -303,7 +317,6 @@ impl Parser {
                 CSVTokenType::SubTy => self.parse_subtype(tokens),
                 CSVTokenType::TlvType => self.parse_tlv(tokens),
                 _ => {
-                    trace!("parser status {:#?}", self.symbol_table);
                     trace!("look up token {:?}", self.lookup_last(tokens));
                     trace!("previous token {:?}", tokens.get(self.pos - 1).unwrap());
                     panic!("Unknown Token {:?}", self.peek(tokens))
