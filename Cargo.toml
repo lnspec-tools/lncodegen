@@ -1,7 +1,8 @@
 [workspace]
-
 members = [
     "frontend_csv",
     "codegen",
     "cmd",
 ]
+
+resolver = "2"

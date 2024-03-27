@@ -216,7 +216,8 @@ impl Parser {
         let CSVToken {
             ty: CSVTokenType::Dotdotdot,
             ..
-        } = self.peek(tokens) else {
+        } = self.peek(tokens)
+        else {
             return false;
         };
         true

@@ -5,16 +5,12 @@ use codegen::rust::RustCodeGen;
 use frontend_csv::parser::parser::Parser;
 use frontend_csv::scanner::scanner::Scanner;
 
-use super::CodeGenError;
-
 pub struct CSVCodeGen {
     pub lang: String,
 }
 
 impl CodeGenMethod for CSVCodeGen {
-    type Error = CodeGenError;
-
-    async fn generate(&self, bolt_content: &str) -> Result<String, Self::Error> {
+    fn generate(&self, bolt_content: &str) -> anyhow::Result<String> {
         let mut scanner = Scanner::new();
         let mut parser = Parser::new();
         let source = bolt_content.chars().collect();
@@ -29,7 +25,7 @@ impl CodeGenMethod for CSVCodeGen {
                 backend.generate(&symbol_table);
                 backend.to_string()
             }
-            _ => return Err(CodeGenError::new("Language not supported")),
+            _ => anyhow::bail!("Language not supported"),
         };
 
         Ok(content)
