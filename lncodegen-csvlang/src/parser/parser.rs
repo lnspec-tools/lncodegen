@@ -171,7 +171,7 @@ impl Parser {
                 // search for u64 alias
                 if ["amount_sat"].contains(&token.val.to_string().as_str()) {
                     let tok = self.lookup_last(tokens).unwrap();
-                    LNMsData::Uint16(tok.val.to_owned())
+                    LNMsData::Uint64(tok.val.to_owned())
                 } else if ["u8", "witness"].contains(&token.val.as_str()) {
                     let tok = self.lookup_last(tokens).unwrap();
                     let size = if !self.peek_and_check_if_type_declaration(tokens) {
